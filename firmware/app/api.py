@@ -9,7 +9,7 @@ import uos as os
 import uasyncio as asyncio
 
 app = picoweb.WebApp(__name__)
-from . import hal
+from . import hal, irrigation
 
 
 @app.route("/api/status", methods=["GET"])
@@ -29,7 +29,7 @@ async def selftest(req, resp):
     try:
         from . import self_test
 
-        await self_test._self_test()
+        await self_test.run_tests()
         await picoweb.start_response(resp, content_type="text/plain")
         with open("/static/test.log") as f:
             for line in f.readlines():
@@ -37,6 +37,18 @@ async def selftest(req, resp):
     except Exception as e:
         print_exception(e)
         await status(req, resp)
+
+
+@app.route(re.compile("/api/mode/(manual|auto|)"), methods=["GET", "PUT"])
+def mode(req, resp):
+    if req.method == "PUT":
+        if req.url_match.group(1) == "manual":
+            irrigation.auto_mode = False
+        elif req.url_match.group(1) == "auto":
+            irrigation.auto_mode = True
+    encoded = json.dumps({"mode": "auto" if irrigation.auto_mode else "manual"})
+    yield from picoweb.start_response(resp, content_type="application/json")
+    yield from resp.awrite(encoded)
 
 
 @app.route("/api/repl")
