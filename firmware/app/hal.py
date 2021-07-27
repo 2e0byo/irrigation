@@ -49,5 +49,5 @@ valve = Valve(en, in1, in2)
 
 
 def status():
-    state = {"valve": valve.state}
+    state = {"valve": valve.state, "mode": "auto" if auto_mode else "manual"}
     return state
