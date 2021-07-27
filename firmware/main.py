@@ -32,6 +32,8 @@ try:
     logger.addHandler(sh)
     logger.debug("Logger initialised")
 
+    fallback_connect()
+
     print("import app")
     import app
 
