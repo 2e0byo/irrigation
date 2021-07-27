@@ -37,10 +37,10 @@ class Valve:
     @state.setter
     def state(self, val):
         if val:
-            asyncio.create_task(self._open)
+            asyncio.create_task(self._open())
             self._state = True
         else:
-            asyncio.create_task(self._close)
+            asyncio.create_task(self._close())
             self._state = False
         return self._state
 
