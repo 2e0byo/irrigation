@@ -1,6 +1,8 @@
 import gc
 from sys import print_exception
 import uasyncio as asyncio
+from .clock import clockstr
+import machine
 
 errors = []
 
@@ -30,22 +32,50 @@ async def test_valve():
 
     assert not valve.state
     valve.state = True
-    assert valve.en
-    assert valve.in1
-    assert not valve.in2
+    await asyncio.sleep_ms(100)
+    assert valve.en(), "Not enabled"
+    assert valve.in1(), "Not in1"
+    assert not valve.in2(), "in2"
     await asyncio.sleep(1)
-    assert not valve.en
+    assert not valve.en(), "Still enabled"
     valve.state = False
-    assert valve.en
-    assert not valve.in1
-    assert valve.in2
+    await asyncio.sleep_ms(100)
+    assert valve.en(), "Not enabled"
+    assert not valve.in1(), "in1"
+    assert valve.in2(), "Not in2"
     await asyncio.sleep(1)
-    assert not valve.en
+    assert not valve.en(), "Still enabled again"
 
 
 tests = [test_valve]
 
 
 async def run_tests():
+    with open("/static/test.log", "w") as f:
+        f.write("Test begins at {}\n".format(clockstr()))
     for test in tests:
         await run_test(test, test.__name__)
+
+    if errors:
+        log_print("\n\n---Errors:---\n\n")
+        for e in errors:
+            print_exception(e)
+            with open("/static/test.log", "a") as f:
+                print_exception(e, f)
+        log_print("\n\n")
+
+    else:
+        log_print("\n\n---Success---\n\n")
+        log_print("All tests passed\n\n")
+
+    log_print("====Testing completed====")
+
+    print("\n\nWill reboot in 60s")
+    asyncio.get_event_loop().create_task(reboot_later())
+    gc.collect()
+
+
+async def reboot_later():
+    await asyncio.sleep(60)
+    print("Rebooting....")
+    machine.reset()
