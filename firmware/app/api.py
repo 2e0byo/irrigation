@@ -14,7 +14,11 @@ from . import hal
 
 @app.route("/api/status", methods=["GET"])
 def status(req, resp):
-    state = hal.status()
+    try:
+        state = hal.status()
+    except Exception as e:
+        print_exception(e)
+        state = {"exception": e}
     encoded = json.dumps(state)
     yield from picoweb.start_response(resp, content_type="application/json")
     yield from resp.awrite(encoded)
