@@ -52,3 +52,10 @@ def start(logger):
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
     logger.info("Everything started.")
+
+    try:
+        loop.run_forever()
+    finally:
+        print("Loop ended")
+        sleep(60)
+        machine.reset()
