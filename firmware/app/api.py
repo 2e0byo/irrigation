@@ -51,11 +51,10 @@ def mode(req, resp):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/hardware/(valve)/(on|off)"), methods=["PUT"])
-def control_hardware(req, resp):
-    output = req.url_match.group(1)
-    state = True if req.url_match.group(2) == "on" else False
-    setattr(hal, output, state)
+@app.route(re.compile("/api/valve/(on|off)"), methods=["PUT"])
+def control_valve(req, resp):
+    state = True if req.url_match.group(1) == "on" else False
+    hal.valve.state = state
     yield from status()
 
 
