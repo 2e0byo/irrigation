@@ -51,6 +51,14 @@ def mode(req, resp):
     yield from resp.awrite(encoded)
 
 
+@app.route(re.compile("/api/hardware/(valve)/(on|off)"), methods=["PUT"])
+def control_hardware(req, resp):
+    output = req.url_match.group(1)
+    state = True if req.url_match.group(2) == "on" else False
+    setattr(hal, output, state)
+    yield from status()
+
+
 @app.route("/api/repl")
 async def fallback(req, resp):  # we should authenticate later
     with open("/fallback", "w") as f:
