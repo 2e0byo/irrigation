@@ -49,5 +49,5 @@ valve = Valve(en, in1, in2)
 
 
 def status():
-    state = {"valve": valve.status}
+    state = {"valve": valve.state}
     return state
