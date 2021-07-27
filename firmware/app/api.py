@@ -55,7 +55,7 @@ def mode(req, resp):
 def control_valve(req, resp):
     state = True if req.url_match.group(1) == "on" else False
     hal.valve.state = state
-    yield from status()
+    yield from status(req, resp)
 
 
 @app.route("/api/repl")
@@ -81,7 +81,7 @@ def countdown():
 
 
 async def run_app():
-    app.run(debug=True, host="0.0.0.0", port="80", log=logging)
+    app.run(debug=True, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
 
 
 def init(loop):
