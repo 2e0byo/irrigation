@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py
+all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py
 
 ../dist/main.py: main.py
 	../install.sh ../dist/ main.py
@@ -22,3 +22,6 @@ all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.
 
 ../dist/app/settings.py: app/settings.py
 	../install.sh ../dist/app/settings.py app/settings.py
+
+../dist/app/irrigation.py: app/irrigation.py
+	../install.sh ../dist/app/irrigation.py app/irrigation.py
