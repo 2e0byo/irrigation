@@ -5,12 +5,14 @@ from sys import print_exception
 import picoweb
 import ujson as json
 import uos as os
+import utemplate
 
 import uasyncio as asyncio
 
-app = picoweb.WebApp(__name__)
 from . import hal, irrigation, clock
 
+app = picoweb.WebApp(__name__)
+app.template_loader = utemplate.recompile.Loader
 
 @app.route("/api/status", methods=["GET"])
 def format_status(req, resp):
