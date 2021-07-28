@@ -48,6 +48,7 @@ def start(logger):
     loop = asyncio.get_event_loop()
     api.init(loop)
     clock.init(loop)
+    hal.init(loop)
     gc.collect()
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 

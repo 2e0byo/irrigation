@@ -1,5 +1,9 @@
 from machine import Pin
 import uasyncio as asyncio
+from sht1x import SHT1x
+import logging
+
+logger = logging.getLogger("Hal")
 
 en = Pin(23, Pin.OUT)
 in1 = Pin(22, Pin.OUT)
@@ -47,9 +51,48 @@ class Valve:
 
 valve = Valve(en, in1, in2)
 
+clk = Pin(18)
+data = Pin(17)
+power = Pin(19, Pin.OUT)
+sensor = SHT1x(data, clk)
+
+
+async def read_sensor():
+    power.on()
+    await asyncio.sleep_ms(200)
+    temp = sensor.read_temperature()
+    humid = sensor.read_humidity()
+    power.off()
+    return temp, humid
+
+
+async def read_sensor_loop():
+    global soil_temperature, soil_humidity
+    silent_count = 0
+    while True:
+        try:
+            soil_temperature, soil_humidity = await read_sensor()
+            silent_count = 0
+        except Exception as e:
+            logger.exc("Read sensor failed: {}".format(e))
+            silent_count += 1
+        if silent_count > 10:
+            soil_temperature, soil_humidity = None, None
+        await asyncio.sleep(60)
+
 
 def status():
     from . import irrigation
 
-    state = {"valve": valve.state, "mode": "auto" if irrigation.auto_mode else "manual"}
+    state = {
+        "valve": valve.state,
+        "mode": "auto" if irrigation.auto_mode else "manual",
+        "soil_temperature": soil_temperature,
+        "soil_humidity": soil_humidity,
+    }
+    # power.off()
     return state
+
+
+def init(loop):
+    loop.create_task(read_sensor_loop())
