@@ -68,6 +68,24 @@ async def fallback(req, resp):  # we should authenticate later
     await resp.awrite(encoded)
 
 
+@app.route(re.compile("/static/(.+)"))
+def static(req, resp):
+    fn = "static/{}".format(req.url_match.group(1))
+    try:
+        os.stat(fn)
+    except OSError:
+        yield from picoweb.start_response(resp, content_type="application/json")
+        encoded = json.dumps({"Error": "File not found"})
+        yield from resp.awrite(encoded)
+
+    if fn.endswith("json"):
+        yield from picoweb.start_response(resp, content_type="application/json")
+    else:
+        yield from picoweb.start_response(resp, content_type="text/plain")
+    with open(fn) as f:
+        yield from resp.awrite(f.read())
+
+
 async def _fallback():
     print("Falling back in 10")
     await asyncio.sleep(10)
