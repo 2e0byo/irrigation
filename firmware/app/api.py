@@ -9,13 +9,13 @@ import uos as os
 import uasyncio as asyncio
 
 app = picoweb.WebApp(__name__)
-from . import hal, irrigation
+from . import hal, irrigation, clock
 
 
 @app.route("/api/status", methods=["GET"])
-def status(req, resp):
+def format_status(req, resp):
     try:
-        state = hal.status()
+        state = status()
     except Exception as e:
         print_exception(e)
         state = {"exception": e}
@@ -51,11 +51,15 @@ def mode(req, resp):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/valve/(on|off)"), methods=["PUT"])
+@app.route(re.compile("/api/valve/(on|off)"), methods=["GET", "PUT"])
 def control_valve(req, resp):
     state = True if req.url_match.group(1) == "on" else False
     hal.valve.state = state
-    yield from status(req, resp)
+    if req.method == "PUT":
+        yield from status(req, resp)
+    else:
+        headers = {"Location": "/api/static/index.html"}
+        yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
 @app.route("/api/repl")
@@ -68,8 +72,10 @@ async def fallback(req, resp):  # we should authenticate later
     await resp.awrite(encoded)
 
 
-@app.route(re.compile("/static/(.+)"))
+@app.route(re.compile("^/static/(.+)"))
 def static(req, resp):
+    print("Called static")
+    print(req.url_match)
     fn = "static/{}".format(req.url_match.group(1))
     try:
         os.stat(fn)
@@ -78,10 +84,19 @@ def static(req, resp):
         encoded = json.dumps({"Error": "File not found"})
         yield from resp.awrite(encoded)
 
-    if fn.endswith("json"):
-        yield from picoweb.start_response(resp, content_type="application/json")
-    else:
-        yield from picoweb.start_response(resp, content_type="text/plain")
+    content_types = {
+        "json": "application/json",
+        "html": "text/html",
+    }
+    try:
+        ext = fn.split(".")[:-1]
+        if ext in content_types:
+            ctype = content_types[ext]
+        else:
+            ctype = "text/plain"
+    except Exception:
+        ctype = "text/plain"
+        yield from picoweb.start_response(resp, content_type=ctype)
     with open(fn) as f:
         yield from resp.awrite(f.read())
 
@@ -96,6 +111,12 @@ async def _fallback():
 
 def countdown():
     asyncio.get_event_loop().create_task(_fallback())
+
+
+def status():
+    report = hal.status()
+    report["runtime"] = clock.clockstr(clock.runtime())
+    return report
 
 
 async def run_app():
