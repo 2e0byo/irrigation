@@ -8,7 +8,7 @@ import utemplate.recompile
 
 import uasyncio as asyncio
 
-from . import hal, irrigation, clock
+from . import hal, irrigation, clock, settings
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
@@ -66,6 +66,26 @@ def control_valve(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
+@app.route(re.compile("/api/settings/(.*)/(.*)"), methods=["PUT"])
+def setting(req, resp):
+    k = req.url_match.group(1)
+    v = req.url_match.group(2)
+    try:
+        v = float(v)
+    except ValueError:
+        pass
+    try:
+        v = int(v)
+    except ValueError:
+        pass
+
+    try:
+        settings.set(k, v)
+    except Exception as e:
+        print_exception(e)
+    yield from status(req, resp)
+
+
 @app.route("/api/repl")
 async def fallback(req, resp):  # we should authenticate later
     with open("/fallback", "w") as f:
@@ -91,6 +111,7 @@ def countdown():
 def status():
     report = hal.status()
     report["runtime"] = clock.timestr(clock.runtime())
+    report.update(settings.settings)
     return report
 
 
