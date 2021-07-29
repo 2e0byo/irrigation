@@ -1,5 +1,5 @@
 from packing import PackedReadings
-import settings
+from . import settings
 
 packer = PackedReadings(
     "readings",
@@ -7,5 +7,5 @@ packer = PackedReadings(
     settings.get("log_size", 1440),
     2,
     1,
-    keep_logs=settings.get("keep_logs"),
+    keep_logs=settings.get("keep_logs", 3),
 )
