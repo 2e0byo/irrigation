@@ -89,13 +89,15 @@ def setting(req, resp):
 @app.route("/api/log")
 def log(req, resp):
     yield from picoweb.start_response(resp, content_type="application/json")
+    yield from resp.awrite("[")
     for floats, bools in graph.packer.read():
         enc = {
             "soil_temperature": floats[0],
             "soil_humidity": floats[1],
             "valve": bools[0],
         }
-        yield from resp.awrite(json.dumps(enc))
+        yield from resp.awrite("{},".format(json.dumps(enc)))
+    yield from resp.awrite("]")
 
 
 @app.route("/api/repl")
