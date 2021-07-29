@@ -90,13 +90,17 @@ def setting(req, resp):
 def log(req, resp):
     yield from picoweb.start_response(resp, content_type="application/json")
     yield from resp.awrite("[")
+    started = False
     for floats, bools in graph.packer.read():
+        if started:
+            yield from resp.awrite(",")
         enc = {
             "soil_temperature": floats[0],
             "soil_humidity": floats[1],
             "valve": bools[0],
         }
-        yield from resp.awrite("{},".format(json.dumps(enc)))
+        yield from resp.awrite("{}".format(json.dumps(enc)))
+        started = True
     yield from resp.awrite("]")
 
 
