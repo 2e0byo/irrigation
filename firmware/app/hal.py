@@ -70,7 +70,7 @@ async def read_sensor():
 
 async def read_sensor_loop():
     global soil_temperature, soil_humidity
-    silent_count = 0
+    silent_count = 0  # don't keep stale readings indefinitely
     while True:
         try:
             soil_temperature, soil_humidity = await read_sensor()
