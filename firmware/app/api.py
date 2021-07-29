@@ -90,7 +90,7 @@ def countdown():
 
 def status():
     report = hal.status()
-    report["runtime"] = clock.clockstr(clock.runtime())
+    report["runtime"] = clock.timestr(clock.runtime())
     return report
 
 
