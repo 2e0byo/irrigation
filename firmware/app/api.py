@@ -62,7 +62,7 @@ def control_valve(req, resp):
     if req.method == "PUT":
         yield from status(req, resp)
     else:
-        headers = {"Location": "/static/index.html"}
+        headers = {"Location": "/"}
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
