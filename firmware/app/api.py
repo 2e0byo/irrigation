@@ -8,7 +8,7 @@ import utemplate.recompile
 
 import uasyncio as asyncio
 
-from . import hal, irrigation, clock, settings
+from . import hal, irrigation, clock, settings, graph
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
@@ -84,6 +84,18 @@ def setting(req, resp):
     except Exception as e:
         print_exception(e)
     yield from status(req, resp)
+
+
+@app.route("/api/log")
+def log(req, resp):
+    yield from picoweb.start_response(resp, content_type="application/json")
+    for floats, bools in graph.packer.read():
+        enc = {
+            "soil_temperature": floats[0],
+            "soil_humidity": floats[1],
+            "valve": bools[0],
+        }
+        yield from resp.awrite(enc)
 
 
 @app.route("/api/repl")
