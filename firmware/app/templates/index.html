@@ -1,3 +1,4 @@
+{% args data %}
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -19,12 +20,12 @@
 
         <!-- CSS
              –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-        <link rel="stylesheet" href="css/normalize.css">
-        <link rel="stylesheet" href="css/skeleton.css">
+        <link rel="stylesheet" href="static/css/normalize.css">
+        <link rel="stylesheet" href="static/css/skeleton.css">
 
         <!-- Favicon
              –––––––––––––––––––––––––––––––––––––––––––––––––– -->
-        <link rel="icon" type="image/png" href="images/favicon.png">
+        <link rel="icon" type="static/image/png" href="static/images/favicon.png">
 
     </head>
     <body>
@@ -33,12 +34,36 @@
              –––––––––––––––––––––––––––––––––––––––––––––––––– -->
         <div class="container">
             <h1> Automatic Watering Controller </h1>
+            <!-- <p> {{data}} </p> -->
             <div class="row">
-                <div class="one-half column" style="margin-top: 25%">
+                <h4>Status</h4>
+                <div class="one-half column" style=margin-top: 25%">
+                    <table class ="u-full-width">
+                        <thead>
+                            <tr>
+                                <th>
+                                    Property
+                                </th>
+                                <th>
+                                    Value
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for k, v in data.items() %}
+                            <tr>
+                                <td>{{k}}</td>
+                                <td>{{v}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="one-half column">
                     <h4>Valve Control</h4>
 
-                    <a class="button button-primary" href="../valve/on">Turn On</a>
-                    <a class="button" href="../valve/off">Turn Off</a>
+                    <a class="button button-primary" href="api/valve/on">Turn On</a>
+                    <a class="button" href="api/valve/off">Turn Off</a>
 
                 </div>
             </div>

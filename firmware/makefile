@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/static/index.html
+all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/app/templates/index.html ../dist/app/static/css/skeleton.css ../dist/app/static/css/normalize.css ../dist/app/static/images/favicon.png
 
 ../dist/main.py: main.py
 	../install.sh ../dist/ main.py
@@ -21,10 +21,19 @@ all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.
 	../install.sh ../dist/app/ app/self_test.py
 
 ../dist/app/settings.py: app/settings.py
-	../install.sh ../dist/app/settings.py app/settings.py
+	../install.sh ../dist/app/ app/settings.py
 
 ../dist/app/irrigation.py: app/irrigation.py
-	../install.sh ../dist/app/irrigation.py app/irrigation.py
+	../install.sh ../dist/app/ app/irrigation.py
 
-../dist/static/index.html: static/index.html
-	../copy.sh ../dist/static/index.html static/index.html
+../dist/app/templates/index.html: app/templates/index.html
+	../copy.sh ../dist/app/templates/ app/templates/index.html
+
+../dist/app/static/css/normalize.css: app/static/css/normalize.css
+	../copy.sh ../dist/app/static/css/ app/static/css/normalize.css
+
+../dist/app/static/css/skeleton.css: app/static/css/skeleton.css
+	../copy.sh ../dist/app/static/css/ app/static/css/skeleton.css
+
+../dist/app/static/images/favicon.png: app/static/images/favicon.png
+	../copy.sh ../dist/app/static/images/ app/static/images/favicon.png
