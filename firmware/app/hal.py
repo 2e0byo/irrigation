@@ -55,6 +55,7 @@ clk = Pin(18)
 data = Pin(17)
 power = Pin(19, Pin.OUT)
 sensor = SHT1x(data, clk)
+soil_temperature, soil_humidity = None, None
 
 
 async def read_sensor():
