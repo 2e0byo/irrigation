@@ -4,14 +4,20 @@ from sys import print_exception
 
 import picoweb
 import ujson as json
-import utemplate
+import utemplate.recompile
 
 import uasyncio as asyncio
 
 from . import hal, irrigation, clock
 
 app = picoweb.WebApp(__name__)
-app.template_loader = utemplate.recompile.Loader
+app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
+
+
+@app.route("/")
+def index(req, resp):
+    yield from app.render_template(resp, "index.html", (status(),))
+
 
 @app.route("/api/status", methods=["GET"])
 def format_status(req, resp):
