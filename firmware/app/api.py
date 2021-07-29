@@ -4,7 +4,6 @@ from sys import print_exception
 
 import picoweb
 import ujson as json
-import uos as os
 import utemplate
 
 import uasyncio as asyncio
