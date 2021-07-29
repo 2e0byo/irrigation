@@ -30,6 +30,13 @@ def clockstr(time=None):
     return timestamp
 
 
+def timestr(t):
+    d, rem = divmod(t, 86400)
+    h, rem = divmod(rem, 3600)
+    m, s = divmod(rem, 60)
+    return "{} {:02}:{:02}:{:02}".format(d, h, m, s)
+
+
 async def sync_clock():
     global boot_time
     while True:
