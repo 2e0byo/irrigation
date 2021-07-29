@@ -31,6 +31,8 @@ def clockstr(time=None):
 
 
 def timestr(t):
+    if not t:
+        return "None"
     d, rem = divmod(t, 86400)
     h, rem = divmod(rem, 3600)
     m, s = divmod(rem, 60)
