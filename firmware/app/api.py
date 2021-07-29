@@ -45,14 +45,18 @@ async def selftest(req, resp):
 
 @app.route(re.compile("/api/mode/(manual|auto|)"), methods=["GET", "PUT"])
 def mode(req, resp):
-    if req.method == "PUT":
+    if req.url_match.group(1):
         if req.url_match.group(1) == "manual":
             irrigation.auto_mode = False
         elif req.url_match.group(1) == "auto":
             irrigation.auto_mode = True
     encoded = json.dumps({"mode": "auto" if irrigation.auto_mode else "manual"})
-    yield from picoweb.start_response(resp, content_type="application/json")
-    yield from resp.awrite(encoded)
+    if req.method == "PUT":
+        yield from picoweb.start_response(resp, content_type="application/json")
+        yield from resp.awrite(encoded)
+    else:
+        headers = {"Location": "/"}
+        yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
 @app.route(re.compile("/api/valve/(on|off)"), methods=["GET", "PUT"])

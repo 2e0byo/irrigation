@@ -28,7 +28,9 @@
         <link rel="icon" type="static/image/png" href="static/images/favicon.png">
 
     </head>
-    <body>
+    <body><script src="https://cdn.jsdelivr.net/npm/chart.js@3.5.0/dist/chart.min.js"></script>
+        <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.5.0/chart.js" integrity="sha512-XcsV/45eM/syxTudkE8AoKK1OfxTrlFpOltc9NmHXh3HF+0ZA917G9iG6Fm7B6AzP+UeEzV8pLwnbRNPxdUpfA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+        <script src="https://code.jquery.com/jquery-3.6.0.js"></script>
 
         <!-- Primary Page Layout
              –––––––––––––––––––––––––––––––––––––––––––––––––– -->
@@ -36,8 +38,8 @@
             <h1> Automatic Watering Controller </h1>
             <!-- <p> {{data}} </p> -->
             <div class="row">
-                <h4>Status</h4>
                 <div class="one-half column" style=margin-top: 25%">
+                    <h4>Status</h4>
                     <table class ="u-full-width">
                         <thead>
                             <tr>
@@ -66,10 +68,109 @@
                     <a class="button" href="api/valve/off">Turn Off</a>
 
                 </div>
-            </div>
-        </div>
+                <div class="one-half column">
+                    <h4>Mode Control</h4>
+                    <a class="button button-primary" href="api/mode/auto">Auto Mode</a>
+                    <a class="button" href="api/mode/manual">Manual Mode</a>
+                </div>
 
-        <!-- End Document
-             –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+            </div>
+            <div class="row">
+                <div class="twelve columns">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+            <script>
+             var raw_data = new Array();
+             var labels = new Array();
+             console.log("here");
+
+             $.ajax({
+                 url: 'api/log',
+                 dataType: 'JSON',
+                 success: function(result){
+                     var temps = new Array();
+                     var hygs = new Array();
+                     var valves = new Array();
+                     console.log(result);
+                     for (i in result) {
+                         raw_data.push(result[i]);
+                         temps.push(result[i].soil_temperature);
+                         hygs.push(result[i].soil_humidity);
+                         valves.push(result[i].valve);
+                         labels.push("");
+                     }
+
+                     console.log(raw_data, labels);
+                     var config = {
+                         type: 'line',
+                         data: {
+                             labels : labels,
+                             datasets: [
+                                 {
+                                     label: 'Soil Temperature',
+                                     yAxisID: "temp",
+                                     data: temps,
+                                     borderColor: 'red',
+                                     fill: false,
+                                     parsing: {
+                                         yAxisKey: 'soil_temperature'
+                                     },
+                                 },
+                                 {
+                                     label: "Soil Humidity",
+                                     yAxisID: "hygr",
+                                     data: hygs,
+                                     borderColor: 'green',
+                                     fill: false,
+                                     parsing: { yAxisKey: 'soil_humidity'}
+                                 },
+                                 {
+                                     label: "Valve Status",
+                                     yAxisID: "valve",
+                                     data: valves,
+                                     borderColor: 'blue',
+                                     fill: true,
+                                     parsing: { yAxisKey: 'valve'}
+                                 }
+                             ],
+                             options: {
+                                 scales: {
+                                     yAxes: [
+                                         {
+                                             position: "right",
+                                             "id": "hygr",
+                                             display: true,
+                                             callback:(label,index,labels)=>{ return label + "%"; }
+                                         },
+                                         {
+                                             position: "right",
+                                             "id": "temp",
+                                             display: true
+                                         },
+                                         {
+                                             position: "right",
+                                             "id": "valve",
+                                             display: false
+                                         }
+                                     ]
+                                 },
+                                 title: {
+                                     display: true,
+                                     text: "Log"
+                                 }
+                             }
+                         },
+                     };
+                     console.log(raw_data, config);
+                     var ctx = document.getElementById('canvas').getContext('2d');
+                     let chart  = new Chart(ctx, config);
+					           chart.update();
+                 }
+             });
+            </script>
+
+            <!-- End Document
+                 –––––––––––––––––––––––––––––––––––––––––––––––––– -->
     </body>
 </html>
