@@ -2,6 +2,7 @@ from machine import Pin
 import uasyncio as asyncio
 from sht1x import SHT1x
 import logging
+from . import settings, graph
 
 logger = logging.getLogger("Hal")
 
@@ -77,8 +78,10 @@ async def read_sensor_loop():
         except Exception as e:
             logger.exc("Read sensor failed: {}".format(e))
             silent_count += 1
-        if silent_count > 10:
-            soil_temperature, soil_humidity = None, None
+            if silent_count > 10:
+                soil_temperature, soil_humidity = None, None
+            continue
+        graph.packer.append([soil_temperature, soil_humidity], [valve.state])
         await asyncio.sleep(60)
 
 

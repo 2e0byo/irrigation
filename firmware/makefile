@@ -1,6 +1,6 @@
 .PHONY: all
 
-all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/app/templates/index.html ../dist/app/static/css/skeleton.css ../dist/app/static/css/normalize.css ../dist/app/static/images/favicon.png
+all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/app/templates/index.html ../dist/app/static/css/skeleton.css ../dist/app/static/css/normalize.css ../dist/app/static/images/favicon.png ../dist/app/graph.py
 
 ../dist/main.py: main.py
 	../install.sh ../dist/ main.py
@@ -22,6 +22,9 @@ all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.
 
 ../dist/app/settings.py: app/settings.py
 	../install.sh ../dist/app/ app/settings.py
+
+../dist/app/graph.py: app/graph.py
+	../install.sh ../dist/app/ app/graph.py
 
 ../dist/app/irrigation.py: app/irrigation.py
 	../install.sh ../dist/app/ app/irrigation.py
