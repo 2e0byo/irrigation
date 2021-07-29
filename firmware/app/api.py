@@ -95,7 +95,7 @@ def log(req, resp):
             "soil_humidity": floats[1],
             "valve": bools[0],
         }
-        yield from resp.awrite(enc)
+        yield from resp.awrite(json.dumps(enc))
 
 
 @app.route("/api/repl")
