@@ -32,10 +32,7 @@ async def selftest(req, resp):
         from . import self_test
 
         await self_test.run_tests()
-        await picoweb.start_response(resp, content_type="text/plain")
-        with open("/static/test.log") as f:
-            for line in f.readlines():
-                await resp.awrite(line)
+        await app.sendfile(resp, "/app/static/test.log")
     except Exception as e:
         print_exception(e)
         await status(req, resp)
@@ -60,7 +57,7 @@ def control_valve(req, resp):
     if req.method == "PUT":
         yield from status(req, resp)
     else:
-        headers = {"Location": "/api/static/index.html"}
+        headers = {"Location": "/static/index.html"}
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
@@ -72,35 +69,6 @@ async def fallback(req, resp):  # we should authenticate later
     encoded = json.dumps({"status": "Falling back in 10s"})
     await picoweb.start_response(resp, content_type="application/json")
     await resp.awrite(encoded)
-
-
-@app.route(re.compile("^/static/(.+)"))
-def static(req, resp):
-    print("Called static")
-    print(req.url_match)
-    fn = "static/{}".format(req.url_match.group(1))
-    try:
-        os.stat(fn)
-    except OSError:
-        yield from picoweb.start_response(resp, content_type="application/json")
-        encoded = json.dumps({"Error": "File not found"})
-        yield from resp.awrite(encoded)
-
-    content_types = {
-        "json": "application/json",
-        "html": "text/html",
-    }
-    try:
-        ext = fn.split(".")[:-1]
-        if ext in content_types:
-            ctype = content_types[ext]
-        else:
-            ctype = "text/plain"
-    except Exception:
-        ctype = "text/plain"
-        yield from picoweb.start_response(resp, content_type=ctype)
-    with open(fn) as f:
-        yield from resp.awrite(f.read())
 
 
 async def _fallback():

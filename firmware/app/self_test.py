@@ -9,7 +9,7 @@ errors = []
 
 def log_print(*args):
     print(*args)
-    with open("/static/test.log", "a") as f:
+    with open("/app/static/test.log", "a") as f:
         f.write("{}\n".format(" ".join(args)))
 
 
@@ -22,7 +22,7 @@ async def run_test(testfn, name):
     except Exception as e:
         log_print("Test {} raised exception".format(name))
         print_exception(e)
-        with open("/static/test.log", "a") as f:
+        with open("/app/static/test.log", "a") as f:
             print_exception(e, f)
         errors.append(e)
 
@@ -51,7 +51,7 @@ tests = [test_valve]
 
 
 async def run_tests():
-    with open("/static/test.log", "w") as f:
+    with open("/app/static/test.log", "w") as f:
         f.write("Test begins at {}\n".format(clockstr()))
     for test in tests:
         await run_test(test, test.__name__)
@@ -60,7 +60,7 @@ async def run_tests():
         log_print("\n\n---Errors:---\n\n")
         for e in errors:
             print_exception(e)
-            with open("/static/test.log", "a") as f:
+            with open("/app/static/test.log", "a") as f:
                 print_exception(e, f)
         log_print("\n\n")
 
