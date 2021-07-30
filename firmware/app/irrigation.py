@@ -3,7 +3,7 @@ from time import localtime
 from . import settings
 from .hal import valve, soil_humidity
 
-auto_mode = False
+auto_mode = True
 
 
 async def auto_water_loop():
