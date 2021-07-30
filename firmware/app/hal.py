@@ -64,7 +64,8 @@ async def read_sensor():
     await asyncio.sleep_ms(200)
     temp = sensor.read_temperature()
     humid = sensor.read_humidity()
-    power.off()
+    if settings.get("power_down_sensor", True):
+        power.off()
     return temp, humid
 
 
