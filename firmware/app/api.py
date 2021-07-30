@@ -16,6 +16,7 @@ app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
 
 @app.route("/")
 def index(req, resp):
+    yield from picoweb.start_response(resp, content_type="text/html")
     yield from app.render_template(resp, "index.html", (status(),))
 
 
@@ -70,7 +71,7 @@ def control_valve(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
-@app.route(re.compile("/api/settings/(.*)/(.*)"), methods=["PUT"])
+@app.route(re.compile("/api/settings/(.*)/(.*)"), methods=["PUT", "GET"])
 def setting(req, resp):
     k = req.url_match.group(1)
     v = req.url_match.group(2)
@@ -82,12 +83,20 @@ def setting(req, resp):
         v = int(v)
     except ValueError:
         pass
+    if v == "True":
+        v = True
+    if v == "False":
+        v = False
 
     try:
         settings.set(k, v)
     except Exception as e:
         print_exception(e)
-    yield from status(req, resp)
+    if req.method == "PUT":
+        yield from status(req, resp)
+    else:
+        headers = {"Location": "/"}
+        yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
 @app.route("/api/log")
