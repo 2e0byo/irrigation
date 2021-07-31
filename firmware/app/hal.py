@@ -101,3 +101,4 @@ def status():
 
 def init(loop):
     loop.create_task(read_sensor_loop())
+    valve.state = False
