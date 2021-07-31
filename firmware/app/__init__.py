@@ -23,6 +23,8 @@ def start(logger):
     )
 
     gc.enable()
+    reset_cause = reset_causes[machine.reset_cause() - 1]
+    logger.info("Booting up, reason is {}".format(reset_cause))
 
     print("Loading setting.")
     from . import settings
@@ -36,19 +38,20 @@ def start(logger):
     print("Loading clock")
     from . import clock
 
-    reset_cause = reset_causes[machine.reset_cause() - 1]
-    logger.info("Booting up, reason is {}".format(reset_cause))
-
     gc.collect()
-
     print("Loading api")
     from . import api
+
+    gc.collect()
+    print("Loading irrigation")
+    import irrigation
 
     print("Initialising...")
     loop = asyncio.get_event_loop()
     api.init(loop)
     clock.init(loop)
     hal.init(loop)
+    irrigation.init(loop)
     gc.collect()
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
