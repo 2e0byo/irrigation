@@ -44,7 +44,7 @@ def start(logger):
 
     gc.collect()
     print("Loading irrigation")
-    import irrigation
+    from . import irrigation
 
     print("Initialising...")
     loop = asyncio.get_event_loop()
