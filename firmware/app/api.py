@@ -1,6 +1,7 @@
 import logging
 import re
 from sys import print_exception
+import gc
 
 import picoweb
 import ujson as json
@@ -119,6 +120,7 @@ def log(req, resp):
         yield from resp.awrite("{}".format(json.dumps(enc)))
         started = True
     yield from resp.awrite("]")
+    gc.collect()
 
 
 @app.route("/api/repl")
