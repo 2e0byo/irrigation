@@ -61,6 +61,16 @@ def mode(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
+@app.route(re.compile("/api/watering/(on|off)"), methods=["GET", "PUT"])
+def wtaering(req, resp):
+    irrigation.watering = True if req.url_match.group(1) == "on" else False
+    if req.method == "PUT":
+        yield from status(req, resp)
+    else:
+        headers = {"Location": "/"}
+        yield from picoweb.start_response(resp, status="303", headers=headers)
+
+
 @app.route(re.compile("/api/valve/(on|off)"), methods=["GET", "PUT"])
 def control_valve(req, resp):
     state = True if req.url_match.group(1) == "on" else False

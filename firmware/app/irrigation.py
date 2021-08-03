@@ -7,27 +7,39 @@ import logging
 logger = logging.getLogger("irrigation")
 
 auto_mode = True
+watering = False
+
+
+async def schedule_loop():
+    global watering
+    while True:
+        h, m = localtime()[3:5]
+        if h == settings.get("watering hours", [6, 21]) and not m:
+            logger.info("Schedule watering")
+            watering = True
+        await asyncio.sleep(60)
 
 
 async def auto_water_loop():
+    global watering
     while True:
         while auto_mode:
             try:
                 elapsed = 0
                 if not valve.state:
-                    h, m = localtime()[3:5]
-                    if (
-                        h in settings.get("watering_hours", [6, 21])
-                        and not m
-                        and soil_humidity < settings.get("lower_humidity_threshold", 65)
+                    if watering and soil_humidity < settings.get(
+                        "lower_humidity_threshold", 65
                     ):
+                        logger.info("Started watering")
                         valve.state = True
                         elapsed = 1
                 else:
                     if soil_humidity > settings.get(
                         "upper_humidity_threshold", 70
                     ) or elapsed > settings.get("watering_minutes", 30):
+                        logger.info("Stopped watering")
                         valve.state = False
+                        watering = False
                         elapsed = 0
                     elapsed += 1
             except Exception as e:

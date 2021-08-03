@@ -94,6 +94,7 @@ def status():
         "mode": "auto" if irrigation.auto_mode else "manual",
         "soil_temperature": soil_temperature,
         "soil_humidity": soil_humidity,
+        "watering": irrigation.watering,
     }
     # power.off()
     return state
