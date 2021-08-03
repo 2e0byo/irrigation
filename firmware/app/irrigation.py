@@ -33,6 +33,7 @@ async def auto_water_loop():
                         logger.info("Started watering")
                         valve.state = True
                         elapsed = 1
+                        await asyncio.sleep_ms(500)
                 else:
                     if soil_humidity > settings.get(
                         "upper_humidity_threshold", 70
@@ -42,10 +43,9 @@ async def auto_water_loop():
                         watering = False
                         elapsed = 0
                     elapsed += 1
+                    await asyncio.sleep(60)
             except Exception as e:
                 logger.exc(e)
-
-            await asyncio.sleep(60)
 
         while not auto_mode:
             await asyncio.sleep_ms(100)
