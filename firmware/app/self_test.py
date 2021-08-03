@@ -62,6 +62,23 @@ async def test_watering():
     await asyncio.sleep(1)
     assert not valve.state, "valve not off"
     irrigation.WATER_LOOP_DELAY = wld
+
+
+async def test_schedule_watering():
+    from . import clock, irrigation, settings
+
+    clock.clock_syncing = False
+    now = clock.rtc.now()
+    now[6] = 0
+    now[5] = settings.get("watering hours")[0]
+    clock.rtc.datetime(now)
+    await asyncio.sleep(1)
+    assert irrigation.watering
+    irrigation.watering = False
+    clock.clock_syncing = True
+    clock.ntptime.settime()
+
+
 tests = [test_valve]
 
 
