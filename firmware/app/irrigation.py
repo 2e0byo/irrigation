@@ -54,3 +54,4 @@ async def auto_water_loop():
 
 def init(loop):
     loop.create_task(auto_water_loop())
+    loop.create_task(schedule_loop())
