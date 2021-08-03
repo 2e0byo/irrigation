@@ -10,6 +10,7 @@ from machine import RTC
 rtc = RTC()
 rtc.datetime()
 wlan = network.WLAN(network.STA_IF)
+clock_syncing = True
 
 logger = logging.getLogger(__name__)
 boot_time = None
@@ -42,15 +43,18 @@ def timestr(t):
 async def sync_clock():
     global boot_time
     while True:
-        await asyncio.sleep(60)
-        try:
-            ntptime.settime()
-            rtc.datetime()
-            if not boot_time:
-                boot_time = localtime()
-        except OSError as e:  # errors occasionally
-            print_exception(e)
-        await asyncio.sleep(300)
+        while clock_syncing:
+            await asyncio.sleep(60)
+            try:
+                ntptime.settime()
+                rtc.datetime()
+                if not boot_time:
+                    boot_time = localtime()
+            except OSError as e:  # errors occasionally
+                print_exception(e)
+            await asyncio.sleep(300)
+        while not clock_syncing:
+            await asyncio.sleep(1)
 
 
 def init(loop):
