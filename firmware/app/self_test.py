@@ -47,6 +47,21 @@ async def test_valve():
     assert not valve.en(), "Still enabled again"
 
 
+async def test_watering():
+    from .hal import valve
+    from . import irrigation
+
+    wld = irrigation.WATER_LOOP_DELAY
+    irrigation.WATER_LOOP_DELAY = 1
+    assert not valve.state, "valve one"
+    assert not irrigation.watering, "watering"
+    watering = True
+    await asyncio.sleep(1)
+    assert valve.state, "valve not on"
+    watering = False
+    await asyncio.sleep(1)
+    assert not valve.state, "valve not off"
+    irrigation.WATER_LOOP_DELAY = wld
 tests = [test_valve]
 
 
