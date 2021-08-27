@@ -62,7 +62,7 @@ def mode(req, resp):
 
 
 @app.route(re.compile("/api/watering/(on|off)"), methods=["GET", "PUT"])
-def wtaering(req, resp):
+def watering(req, resp):
     irrigation.watering = True if req.url_match.group(1) == "on" else False
     if req.method == "PUT":
         yield from status(req, resp)
