@@ -21,7 +21,7 @@ def index(req, resp):
     yield from app.render_template(resp, "index.html", (status(),))
 
 
-@app.route("/api/status", methods=["GET"])
+@app.route("/api/status")
 def format_status(req, resp):
     try:
         state = status()
@@ -45,7 +45,7 @@ async def selftest(req, resp):
         await status(req, resp)
 
 
-@app.route(re.compile("/api/mode/(manual|auto|)"), methods=["GET", "PUT"])
+@app.route(re.compile("/api/mode/(manual|auto|)"))
 def mode(req, resp):
     if req.url_match.group(1):
         if req.url_match.group(1) == "manual":
@@ -61,7 +61,7 @@ def mode(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
-@app.route(re.compile("/api/watering/(on|off)"), methods=["GET", "PUT"])
+@app.route(re.compile("/api/watering/(on|off)"))
 def watering(req, resp):
     irrigation.watering = True if req.url_match.group(1) == "on" else False
     if req.method == "PUT":
@@ -71,7 +71,7 @@ def watering(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
-@app.route(re.compile("/api/valve/(on|off)"), methods=["GET", "PUT"])
+@app.route(re.compile("/api/valve/(on|off)"))
 def control_valve(req, resp):
     state = True if req.url_match.group(1) == "on" else False
     hal.valve.state = state
@@ -82,7 +82,7 @@ def control_valve(req, resp):
         yield from picoweb.start_response(resp, status="303", headers=headers)
 
 
-@app.route(re.compile("/api/settings/(.*)/(.*)"), methods=["PUT", "GET"])
+@app.route(re.compile("/api/settings/(.*)/(.*)"))
 def setting(req, resp):
     k = req.url_match.group(1)
     v = req.url_match.group(2)
