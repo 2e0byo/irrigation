@@ -15,6 +15,34 @@ app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
 
 
+def preflight_headers(req):
+    headers = {"Access-Control-Allow-Origin": req.headers[b"Origin"].decode()}
+    for header in ("Access-Control-Request-Method", "Access-Control-Request-Headers"):
+        if header.encode() in req.headers:
+            headers[
+                header.replace("Request", "Allow").replace("hod", "hods")
+            ] = req.headers[header.encode()].decode()
+    return headers
+
+
+def preflight(req, resp):
+    headers = preflight_headers(req)
+    yield from picoweb.start_response(resp, headers=headers)
+
+
+def cors(f):
+    def _cors(req, resp):
+        if req.method == "OPTIONS":
+            yield from preflight(req, resp)
+        elif b"Origin" in req.headers:
+            headers = preflight_headers(req)
+            yield from f(req, resp, headers)
+        else:
+            yield from f(req, resp)
+
+    return _cors
+
+
 @app.route("/")
 def index(req, resp):
     yield from picoweb.start_response(resp, content_type="text/html")
@@ -22,19 +50,23 @@ def index(req, resp):
 
 
 @app.route("/api/status")
-def format_status(req, resp):
+@cors
+def format_status(req, resp, headers=None):
+    print("in format_status")
     try:
         state = status()
     except Exception as e:
         print_exception(e)
         state = {"exception": e}
     encoded = json.dumps(state)
-    yield from picoweb.start_response(resp, content_type="application/json")
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
     yield from resp.awrite(encoded)
 
 
 @app.route("/api/self-test")
-async def selftest(req, resp):
+async def selftest(req, resp, headers=None):
     try:
         from . import self_test
 
@@ -42,76 +74,89 @@ async def selftest(req, resp):
         await app.sendfile(resp, "/app/static/test.log")
     except Exception as e:
         print_exception(e)
-        await status(req, resp)
+        await picoweb.start_response(
+            resp, content_type="application/json", headers=headers
+        )
+        await req.awrite("{Exception:")
+        await req.awrite(e)
+        await req.awrite("}")
 
 
 @app.route(re.compile("/api/mode/(manual|auto|)"))
-def mode(req, resp):
-    if req.url_match.group(1):
+@cors
+def mode(req, resp, headers=None):
+    if req.method == "PUT":
         if req.url_match.group(1) == "manual":
             irrigation.auto_mode = False
         elif req.url_match.group(1) == "auto":
             irrigation.auto_mode = True
     encoded = json.dumps({"mode": "auto" if irrigation.auto_mode else "manual"})
-    if req.method == "PUT":
-        yield from picoweb.start_response(resp, content_type="application/json")
-        yield from resp.awrite(encoded)
-    else:
-        headers = {"Location": "/"}
-        yield from picoweb.start_response(resp, status="303", headers=headers)
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(encoded)
 
 
 @app.route(re.compile("/api/watering/(on|off)"))
-def watering(req, resp):
-    irrigation.watering = True if req.url_match.group(1) == "on" else False
+@cors
+def watering(req, resp, headers=None):
     if req.method == "PUT":
-        yield from status(req, resp)
-    else:
-        headers = {"Location": "/"}
-        yield from picoweb.start_response(resp, status="303", headers=headers)
+        irrigation.watering = True if req.url_match.group(1) == "on" else False
+    encoded = json.dumps({"watering": irrigation.watering})
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(encoded)
 
 
 @app.route(re.compile("/api/valve/(on|off)"))
-def control_valve(req, resp):
-    state = True if req.url_match.group(1) == "on" else False
-    hal.valve.state = state
+@cors
+def control_valve(req, resp, headers=None):
     if req.method == "PUT":
-        yield from status(req, resp)
-    else:
-        headers = {"Location": "/"}
-        yield from picoweb.start_response(resp, status="303", headers=headers)
+        state = True if req.url_match.group(1) == "on" else False
+        hal.valve.state = state
+    encoded = json.dumps({"valve": hal.valve.state})
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/settings/(.*)/(.*)"))
-def setting(req, resp):
+@app.route(re.compile("/api/settings/(.*)/(.*)|"))
+@cors
+def setting(req, resp, headers=None):
     k = req.url_match.group(1)
-    v = req.url_match.group(2)
-    try:
-        v = float(v)
-    except ValueError:
-        pass
-    try:
-        v = int(v)
-    except ValueError:
-        pass
-    if v == "True":
-        v = True
-    if v == "False":
-        v = False
-
-    try:
-        settings.set(k, v)
-    except Exception as e:
-        print_exception(e)
     if req.method == "PUT":
-        yield from status(req, resp)
+        v = req.url_match.group(2)
+        try:
+            v = float(v)
+        except ValueError:
+            pass
+        try:
+            v = int(v)
+        except ValueError:
+            pass
+        if v == "True":
+            v = True
+        if v == "False":
+            v = False
+
+        try:
+            settings.set(k, v)
+            encoded = json.dumps({k: v})
+        except Exception as e:
+            encoded = json.dumps({"Error", e})
     else:
-        headers = {"Location": "/"}
-        yield from picoweb.start_response(resp, status="303", headers=headers)
+        encoded = json.dumps({k: settings.get(k)})
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(encoded)
 
 
 @app.route("/api/log")
-def log(req, resp):
+@cors
+def log(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
@@ -134,12 +179,13 @@ def log(req, resp):
 
 
 @app.route("/api/repl")
-async def fallback(req, resp):  # we should authenticate later
+@cors
+async def fallback(req, resp, headers=None):
     with open("/fallback", "w") as f:
         f.write("")
     countdown()
     encoded = json.dumps({"status": "Falling back in 10s"})
-    await picoweb.start_response(resp, content_type="application/json")
+    await picoweb.start_response(resp, content_type="application/json", headers=headers)
     await resp.awrite(encoded)
 
 
