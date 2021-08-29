@@ -13,6 +13,7 @@ from . import hal, irrigation, clock, settings, graph
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
+logger = logging.getLogger(__name__)
 
 
 def preflight_headers(req):
@@ -33,11 +34,14 @@ def preflight(req, resp):
 def cors(f):
     def _cors(req, resp):
         if req.method == "OPTIONS":
+            logger.debug("preflighting")
             yield from preflight(req, resp)
         elif b"Origin" in req.headers:
+            logger.debug("setting headers")
             headers = preflight_headers(req)
             yield from f(req, resp, headers)
         else:
+            logger.debug("no CORS, calling {}".format(f.__name__))
             yield from f(req, resp)
 
     return _cors
