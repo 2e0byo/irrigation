@@ -163,7 +163,9 @@ def log(req, resp, headers=None):
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
 
-    yield from picoweb.start_response(resp, content_type="application/json")
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
     yield from resp.awrite("[")
     started = False
     for floats, bools in graph.packer.read(n=n, skip=skip):
