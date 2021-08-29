@@ -56,7 +56,6 @@ def index(req, resp):
 @app.route("/api/status")
 @cors
 def format_status(req, resp, headers=None):
-    print("in format_status")
     try:
         state = status()
     except Exception as e:
@@ -78,12 +77,11 @@ async def selftest(req, resp, headers=None):
         await app.sendfile(resp, "/app/static/test.log")
     except Exception as e:
         print_exception(e)
+        state = {"exception": e}
         await picoweb.start_response(
             resp, content_type="application/json", headers=headers
         )
-        await req.awrite("{Exception:")
-        await req.awrite(e)
-        await req.awrite("}")
+        await res.awrite(json.dumps(state))
 
 
 @app.route(re.compile("/api/mode/(manual|auto|)"))
