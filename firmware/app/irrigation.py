@@ -1,8 +1,9 @@
 import uasyncio as asyncio
 from time import localtime
 from . import settings
-from .hal import valve, soil_humidity
+from . import hal
 import logging
+from sys import print_exception
 
 logger = logging.getLogger("irrigation")
 
@@ -24,31 +25,34 @@ async def schedule_loop():
 async def auto_water_loop():
     global watering
     while True:
+        elapsed = 0
         while auto_mode:
             try:
-                elapsed = 0
-                if not valve.state:
-                    if watering and soil_humidity < settings.get(
+                if not hal.valve.state:
+                    if watering and hal.soil_humidity < settings.get(
                         "lower_humidity_threshold", 65
                     ):
                         logger.info("Started watering")
-                        valve.state = True
-                        elapsed = 1
+                        hal.valve.state = True
+                        elapsed += 0.5 / 60
 
                     await asyncio.sleep_ms(500)
+                    continue
+
                 else:
-                    if soil_humidity > settings.get(
+                    if hal.soil_humidity > settings.get(
                         "upper_humidity_threshold", 70
                     ) or elapsed > settings.get("watering_minutes", 30):
                         logger.info("Stopped watering")
-                        valve.state = False
+                        hal.valve.state = False
                         watering = False
                         elapsed = 0
-                    elapsed += 1
+                    elapsed += WATER_LOOP_DELAY / 60
 
-                    await asyncio.sleep(WATER_LOOP_DELAY)
             except Exception as e:
-                logger.exc(e)
+                print_exception(e)
+
+            await asyncio.sleep(WATER_LOOP_DELAY)
 
         while not auto_mode:
             await asyncio.sleep_ms(100)
