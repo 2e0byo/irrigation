@@ -124,7 +124,7 @@ def control_valve(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/settings/(.*)/(.*)|"))
+@app.route(re.compile("^/api/settings/(.*)/(.*|)"))
 @cors
 def setting(req, resp, headers=None):
     k = req.url_match.group(1)
