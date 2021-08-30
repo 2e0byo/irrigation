@@ -1,11 +1,13 @@
-from packing import PackedReadings
+from packing.packed import PackedRotatingLog
 from . import settings
 
-packer = PackedReadings(
+packer = PackedRotatingLog(
     "readings",
     "/app/static/",
-    settings.get("log_size", 1440),
-    2,
-    1,
+    log_lines=settings.get("log_size", 1440),
+    floats=2,
+    ints=0,
+    bools=1,
     keep_logs=settings.get("keep_logs", 3),
+    timestamp=True,
 )
