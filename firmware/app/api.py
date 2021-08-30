@@ -86,7 +86,7 @@ async def selftest(req, resp, headers=None):
         await resp.awrite(json.dumps(state))
 
 
-def settable(var, req, resp, headers=None):
+def settable(f, req, resp, headers=None):
     status = "200"
     encoded = None
     if req.method == "PUT":
@@ -96,10 +96,10 @@ def settable(var, req, resp, headers=None):
             )
             status = "403"
         else:
-            var = True if req.url_match.group(1) == "on" else False
+            f(True if req.url_match.group(1) == "on" else False)
 
     if not encoded:
-        encoded = json.dumps({"value": var})
+        encoded = json.dumps({"value": f()})
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
@@ -109,14 +109,14 @@ def settable(var, req, resp, headers=None):
 
 @app.route(re.compile("/api/auto-mode/(on|off|)"))
 @cors
-def mode(req, resp, headers=None):
-    yield from settable(irrigation.auto_mode, req, resp, headers)
+def auto_mode(req, resp, headers=None):
+    yield from settable(irrigation.auto_waterer.auto_mode, req, resp, headers)
 
 
 @app.route(re.compile("/api/watering/(on|off|)"))
 @cors
 def watering(req, resp, headers=None):
-    yield from settable(irrigation.watering, req, resp, headers)
+    yield from settable(irrigation.auto_waterer.watering, req, resp, headers)
 
 
 @app.route(re.compile("/api/valve/(on|off|)"))
