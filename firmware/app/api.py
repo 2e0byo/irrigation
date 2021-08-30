@@ -175,6 +175,8 @@ def log(req, resp, headers=None):
             "soil_temperature": floats[0],
             "soil_humidity": floats[1],
             "valve": bools[0],
+            "watering": bools[1],
+            "auto_mode": bools[2],
         }
         yield from resp.awrite("{}".format(json.dumps(enc)))
         started = True
