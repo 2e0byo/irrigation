@@ -46,7 +46,7 @@ class Valve:
 
 
 class TempSensor:
-    def __init__(name, sensor, power, logf=None):
+    def __init__(self, name, sensor, power, logf=None):
         self.name = name
         self.sensor = sensor
         self.power = power
