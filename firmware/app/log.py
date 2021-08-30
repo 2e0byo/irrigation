@@ -22,7 +22,7 @@ class RotatingLogHandler(logging.Handler):
 
 
 rotating_handler = RotatingLogHandler(rotating_log)
-rotating_handler.setLevel = logging.INFO
+rotating_handler.setLevel(logging.INFO)
 rotating_handler.setFormatter(
     logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
 )
