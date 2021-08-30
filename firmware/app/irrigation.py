@@ -77,7 +77,7 @@ class AutoWaterer:
                             self.valve.state(False)
                             self.watering = False
                             elapsed = 0
-                        elapsed += WATER_LOOP_DELAY / 60
+                        elapsed += self.delay / 60
 
                 except Exception as e:
                     self.logger.exc(e, "Error in watering loop")
@@ -92,7 +92,7 @@ class AutoWaterer:
         loop.create_task(self.schedule_loop())
 
 
-auto_waterer = AutoWaterer()
+auto_waterer = AutoWaterer("waterer1", hal.temp_sensor, hal.valve)
 
 
 def init(loop):
