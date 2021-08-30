@@ -51,7 +51,7 @@ class AutoWaterer:
             h, m = localtime()[3:5]
             if h == self.watering_hours and not m:
                 self.logger.info("Scheduling watering")
-                self.watering = True
+                self.watering(True)
             await asyncio.sleep(60)
 
     async def auto_water_loop(self):
@@ -60,8 +60,15 @@ class AutoWaterer:
             while self.auto_mode:
                 try:
                     if not self.valve.state():
-                        if self.watering and self.sensor.humidity < self.lower_humidity:
-                            self.logger.info("Started watering")
+                        if (
+                            self.watering()
+                            and self.sensor.humidity < self.lower_humidity
+                        ):
+                            self.logger.info(
+                                "Started watering humidity {} < {}".format(
+                                    self.sensor.humidity, self.lower_humidity
+                                )
+                            )
                             self.valve.state(True)
                             elapsed += 0.5 / 60
 
@@ -75,7 +82,7 @@ class AutoWaterer:
                         ):
                             self.logger.info("Stopped watering")
                             self.valve.state(False)
-                            self.watering = False
+                            self.watering(False)
                             elapsed = 0
                         elapsed += self.loop_delay / 60
 
