@@ -9,7 +9,7 @@ import utemplate.recompile
 
 import uasyncio as asyncio
 
-from . import hal, irrigation, clock, settings, graph
+from . import hal, irrigation, clock, settings, graph, log
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
@@ -158,7 +158,7 @@ def setting(req, resp, headers=None):
 
 @app.route("/api/log")
 @cors
-def log(req, resp, headers=None):
+def graph_log(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
@@ -168,20 +168,33 @@ def log(req, resp, headers=None):
     )
     yield from resp.awrite("[")
     started = False
-    for floats, bools in graph.packer.read(n=n, skip=skip):
+    for reading in graph.packer.read(n=n, skip=skip):
         if started:
             yield from resp.awrite(",")
         enc = {
-            "soil_temperature": floats[0],
-            "soil_humidity": floats[1],
-            "valve": bools[0],
-            "watering": bools[1],
-            "auto_mode": bools[2],
+            "soil_temperature": reading.floats[0],
+            "soil_humidity": reading.floats[1],
+            "valve": reading.bools[0],
+            "watering": reading.bools[1],
+            "auto_mode": reading.bools[2],
+            "timestamp": reading.timestamp,
         }
         yield from resp.awrite("{}".format(json.dumps(enc)))
         started = True
     yield from resp.awrite("]")
     gc.collect()
+
+
+@app.route("/api/syslog")
+@cors
+def syslog(req, resp, headers=None):
+    req.parse_qs()
+    n = int(req.form["n"]) if "n" in req.form else 20
+    skip = int(req.form["skip"] if "skip" in req.form else 0)
+
+    yield from picoweb.start_response(resp, content_type="text/plain", headers=headers)
+    for line in log.rotating_log.read(n=n, skip=skip):
+        yield from resp.awrite(line)
 
 
 @app.route("/api/repl")
@@ -215,7 +228,7 @@ def status():
 
 
 async def run_app():
-    app.run(debug=True, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
+    app.run(debug=0, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
 
 
 def init(loop):

@@ -72,7 +72,7 @@ async def read_sensor():
 def bools():
     from . import irrigation
 
-    return (valve.state, irrigation.watering, irrigation.auto_mode)
+    return valve.state, irrigation.watering, irrigation.auto_mode
 
 
 async def read_sensor_loop():
@@ -88,7 +88,7 @@ async def read_sensor_loop():
             if silent_count > 10:
                 soil_temperature, soil_humidity = None, None
             continue
-        graph.packer.append((soil_temperature, soil_humidity), bools())
+        graph.packer.append(floats=(soil_temperature, soil_humidity), bools=bools())
         await asyncio.sleep(60)
 
 
