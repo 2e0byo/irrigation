@@ -107,10 +107,10 @@ def status():
 
     state = {
         "valve": valve.state(),
-        "mode": "auto" if irrigation.auto_waterer.auto_mode else "manual",
         "soil_temperature": temp_sensor.temperature,
         "soil_humidity": temp_sensor.humidity,
-        "watering": irrigation.auto_waterer.watering,
+        "watering": irrigation.auto_waterer.watering(),
+        "auto_mode": irrigation.auto_waterer.auto_mode(),
     }
     return state
 
