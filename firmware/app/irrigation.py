@@ -30,7 +30,6 @@ class AutoWaterer:
             self._watering = False
         return self._watering
 
-
     @property
     def lower_humidity(self):
         return settings.get("{}/lower_humidity_threshold".format(self.name), 65)
@@ -72,7 +71,7 @@ class AutoWaterer:
                     else:
                         if (
                             self.sensor.humidity > self.upper_humidity
-                            or elapsed > self.watering_minutes:
+                            or elapsed > self.watering_minutes
                         ):
                             self.logger.info("Stopped watering")
                             self.valve.state(False)
