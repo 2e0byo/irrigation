@@ -59,7 +59,7 @@ async def sync_clock():
 
 def clock_synced():
     time = rtc.datetime()
-    return time[0] !== 2000
+    return time[0] != 2000
 
 
 def init(loop):
