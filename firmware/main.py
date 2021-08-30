@@ -37,6 +37,9 @@ try:
     print("import app")
     import app
 
+    logger.addHandler(app.log.rotating_handler)
+    logger.debug("Attached persistent handler")
+
     app.start(logger)
 
 except Exception as e:

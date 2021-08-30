@@ -1,12 +1,15 @@
 .PHONY: all
 
-all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/app/templates/index.html ../dist/app/static/css/skeleton.css ../dist/app/static/css/normalize.css ../dist/app/static/images/favicon.png ../dist/app/graph.py
+all: ../dist/main.py ../dist/app/__init__.py ../dist/app/api.py ../dist/app/hal.py ../dist/app/clock.py ../dist/app/self_test.py ../dist/app/settings.py ../dist/app/irrigation.py ../dist/app/templates/index.html ../dist/app/static/css/skeleton.css ../dist/app/static/css/normalize.css ../dist/app/static/images/favicon.png ../dist/app/graph.py ../dist/app/log.py
 
 ../dist/main.py: main.py
 	../install.sh ../dist/ main.py
 
 ../dist/app/__init__.py: app/__init__.py
 	../install.sh ../dist/app/ app/__init__.py
+
+../dist/app/log.py: app/log.py
+	../install.sh ../dist/app/ app/log.py
 
 ../dist/app/api.py: app/api.py
 	../install.sh ../dist/app/ app/api.py

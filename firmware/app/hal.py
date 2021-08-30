@@ -70,7 +70,7 @@ async def read_sensor():
 
 
 def bools():
-    import irrigation
+    from . import irrigation
 
     return (valve.state, irrigation.watering, irrigation.auto_mode)
 
