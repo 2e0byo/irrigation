@@ -36,11 +36,11 @@ class AutoWaterer:
 
     @property
     def upper_humidity(self):
-        return settings.get("{}/upper_humidity_threshold".format(self.name), 65)
+        return settings.get("{}/upper_humidity_threshold".format(self.name), 75)
 
     @property
     def watering_hours(self):
-        return settings.get("{}/watering_hours", [6, 12])
+        return settings.get("{}/watering_hours".format(self.name), [6, 12])
 
     @property
     def watering_minutes(self):
