@@ -50,7 +50,7 @@ def cors(f):
 @app.route("/")
 def index(req, resp):
     yield from picoweb.start_response(resp, content_type="text/html")
-    yield from app.render_template(resp, "index.html", (status(),))
+    yield from app.render_template(resp, "index.html", (report_status(),))
 
 
 @app.route("/api/status")
@@ -58,7 +58,7 @@ def index(req, resp):
 def format_status(req, resp, headers=None):
     status = "200"
     try:
-        state = status()
+        state = report_status()
     except Exception as e:
         print_exception(e)
         state = {"error": e}
@@ -236,7 +236,7 @@ def countdown():
     asyncio.get_event_loop().create_task(_fallback())
 
 
-def status():
+def report_status():
     report = hal.status()
     report["runtime"] = clock.timestr(clock.runtime())
     report.update(settings.settings)
