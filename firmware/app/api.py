@@ -96,7 +96,7 @@ def settable(f, req, resp, headers=None):
             )
             status = "403"
         else:
-            f(True if req.url_match.group(1) == "on" else False)
+            f(True if req.url_match.group(1) == "True" else False)
 
     if not encoded:
         encoded = json.dumps({"value": f()})
@@ -107,19 +107,19 @@ def settable(f, req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/auto-mode/(on|off|)"))
+@app.route(re.compile("/api/auto-mode/(True|False|)"))
 @cors
 def auto_mode(req, resp, headers=None):
     yield from settable(irrigation.auto_waterer.auto_mode, req, resp, headers)
 
 
-@app.route(re.compile("/api/watering/(on|off|)"))
+@app.route(re.compile("/api/watering/(True|False|)"))
 @cors
 def watering(req, resp, headers=None):
     yield from settable(irrigation.auto_waterer.watering, req, resp, headers)
 
 
-@app.route(re.compile("/api/valve/(on|off|)"))
+@app.route(re.compile("/api/valve/(True|False|)"))
 @cors
 def control_valve(req, resp, headers=None):
     yield from settable(hal.valve.state, req, resp, headers)
@@ -156,7 +156,7 @@ def setting(req, resp, headers=None):
             encoded = json.dumps({"Error", e})
             status = "400"
     elif status == "200":
-        encoded = json.dumps({k: settings.get(k)})
+        encoded = json.dumps({"value": settings.get(k)})
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
     )
