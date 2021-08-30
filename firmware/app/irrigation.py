@@ -77,12 +77,12 @@ class AutoWaterer:
                             self.valve.state(False)
                             self.watering = False
                             elapsed = 0
-                        elapsed += self.delay / 60
+                        elapsed += self.loop_delay / 60
 
                 except Exception as e:
                     self.logger.exc(e, "Error in watering loop")
 
-                await asyncio.sleep(self.delay)
+                await asyncio.sleep(self.loop_delay)
 
             while not self.auto_mode:
                 await asyncio.sleep_ms(100)
