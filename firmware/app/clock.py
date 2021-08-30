@@ -57,5 +57,10 @@ async def sync_clock():
             await asyncio.sleep(1)
 
 
+def clock_synced():
+    time = rtc.datetime()
+    return time[0] !== 2000
+
+
 def init(loop):
     loop.create_task(sync_clock())
