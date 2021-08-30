@@ -31,14 +31,14 @@ async def test_valve():
     from .hal import valve
 
     assert not valve.state()
-    valve.state() = True
+    valve.state(True)
     await asyncio.sleep_ms(100)
     assert valve.en(), "Not enabled"
     assert valve.in1(), "Not in1"
     assert not valve.in2(), "in2"
     await asyncio.sleep(1)
     assert not valve.en(), "Still enabled"
-    valve.state() = False
+    valve.state(False)
     await asyncio.sleep_ms(100)
     assert valve.en(), "Not enabled"
     assert not valve.in1(), "in1"
@@ -49,19 +49,19 @@ async def test_valve():
 
 async def test_watering():
     from .hal import valve
-    from . import irrigation
+    from .irrigation import auto_waterer
 
-    wld = irrigation.WATER_LOOP_DELAY
-    irrigation.WATER_LOOP_DELAY = 1
+    wld = auto_waterer.loop_delay
+    auto_waterer.loop_delay = 1
     assert not valve.state(), "valve one"
     assert not irrigation.auto_waterer.watering(), "watering"
-    watering = True
+    auto_water.watering(True)
     await asyncio.sleep(1)
     assert valve.state(), "valve not on"
-    watering = False
+    autowater.watering(False)
     await asyncio.sleep(1)
     assert not valve.state(), "valve not off"
-    irrigation.WATER_LOOP_DELAY = wld
+    auto_waterer.loop_delay = wld
 
 
 async def test_schedule_watering():
