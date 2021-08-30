@@ -71,7 +71,7 @@ class TempSensor:
         silent_count = 0  # don't keep stale readings indefinitely
         while True:
             try:
-                await read_sensor()
+                await self.read_sensor()
                 silent_count = 0
             except Exception as e:
                 logger.exc(e, "Read sensor failed: {}")
