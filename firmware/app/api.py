@@ -192,9 +192,18 @@ def syslog(req, resp, headers=None):
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
 
-    yield from picoweb.start_response(resp, content_type="text/plain", headers=headers)
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite("[")
+    started = False
     for line in log.rotating_log.read(n=n, skip=skip):
-        yield from resp.awrite(line)
+        if started:
+            yield from resp.awrite(",")
+        yield from resp.awrite(json.dumps({"line": line}))
+        started = True
+
+    yield from resp.awrite("]")
 
 
 @app.route("/api/repl")
