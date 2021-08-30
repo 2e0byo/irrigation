@@ -1,3 +1,4 @@
+from time import sleep
 import uos
 
 if "fallback" in uos.listdir("/"):
@@ -50,6 +51,15 @@ def start(logger):
     loop = asyncio.get_event_loop()
     api.init(loop)
     clock.init(loop)
+    print("Syncing clock...")
+    i = 0
+    while i < 100 and not clock.clock_synced():
+        try:
+            clock.ntptime.settime()
+        except OSError as e:
+            sleep(1)
+            i += 1
+
     hal.init(loop)
     irrigation.init(loop)
     gc.collect()
