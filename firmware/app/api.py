@@ -88,6 +88,7 @@ async def selftest(req, resp, headers=None):
 
 def settable(var, req, resp, headers=None):
     status = "200"
+    encoded = None
     if req.method == "PUT":
         if not req.url_match.group(1):
             encoded = json.dumps(
@@ -96,7 +97,9 @@ def settable(var, req, resp, headers=None):
             status = "403"
         else:
             var = True if req.url_match.group(1) == "on" else False
-    encoded = json.dumps({"value": var})
+
+    if not encoded:
+        encoded = json.dumps({"value": var})
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
