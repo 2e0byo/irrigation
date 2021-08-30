@@ -84,7 +84,7 @@ async def selftest(req, resp, headers=None):
         await res.awrite(json.dumps(state))
 
 
-@app.route(re.compile("/api/mode/(manual|auto|)"))
+@app.route(re.compile("/api/auto-mode/(on|off|)"))
 @cors
 def mode(req, resp, headers=None):
     if req.method == "PUT":
@@ -99,7 +99,7 @@ def mode(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/watering/(on|off)"))
+@app.route(re.compile("/api/watering/(on|off|)"))
 @cors
 def watering(req, resp, headers=None):
     if req.method == "PUT":
@@ -111,7 +111,7 @@ def watering(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route(re.compile("/api/valve/(on|off)"))
+@app.route(re.compile("/api/valve/(on|off|)"))
 @cors
 def control_valve(req, resp, headers=None):
     if req.method == "PUT":
