@@ -14,7 +14,7 @@ class AutoWaterer:
         self._auto_mode = True
         self.sensor = sensor
         self.valve = valve
-        self.logger = logging.getSelf.Logger(__name__)
+        self.logger = logging.getLogger(self.name)
 
     def auto_mode(self, val=None):
         if val:
