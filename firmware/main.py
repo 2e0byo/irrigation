@@ -33,12 +33,14 @@ try:
     logger.debug("Logger initialised")
 
     fallback_connect()
+    print("import log")
+    from app import log
+
+    logger.addHandler(log.rotating_handler)
+    logger.debug("Attached persistent handler")
 
     print("import app")
     import app
-
-    logger.addHandler(app.log.rotating_handler)
-    logger.debug("Attached persistent handler")
 
     app.start(logger)
 
