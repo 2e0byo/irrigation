@@ -35,77 +35,94 @@ class Valve:
         await asyncio.sleep(1)
         self.en.off()
 
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, val):
+    def state(self, val=None):
         if val:
             asyncio.create_task(self._open())
             self._state = True
-        else:
+        elif val is False:
             asyncio.create_task(self._close())
             self._state = False
         return self._state
 
 
-valve = Valve(en, in1, in2)
+class TempSensor:
+    def __init__(name, sensor, power, logf=None):
+        self.name = name
+        self.sensor = sensor
+        self.power = power
+        self.temperature = None
+        self.humidity = None
+        self.logf = logf
 
-clk = Pin(18)
-data = Pin(17)
-power = Pin(19, Pin.OUT)
-sensor = SHT1x(data, clk)
-soil_temperature, soil_humidity = None, None
+    @property
+    def power_down(self):
+        return settings.get("{}/power_down_sensor".format(self.name), True)
+
+    async def read_sensor(self):
+        self.power.on()
+        await asyncio.sleep_ms(200)
+        # these are pretty instantaneous
+        self.temperature = self.sensor.read_temperature()
+        self.humidity = self.sensor.read_humidity()
+        if self.power_down:
+            power.off()
+
+    async def read_sensor_loop(self):
+        silent_count = 0  # don't keep stale readings indefinitely
+        while True:
+            try:
+                await read_sensor()
+                silent_count = 0
+            except Exception as e:
+                logger.exc(e, "Read sensor failed: {}")
+                silent_count += 1
+                if silent_count > 10:
+                    self.soil_temperature = None
+                    self.soil_humidity = None
+                continue
+            if self.logf:
+                self.logf(self)
+            await asyncio.sleep(60)
+
+    def init(self, loop):
+        loop.create_task(self.read_sensor_loop())
 
 
-async def read_sensor():
-    power.on()
-    await asyncio.sleep_ms(200)
-    temp = sensor.read_temperature()
-    humid = sensor.read_humidity()
-    if settings.get("power_down_sensor", True):
-        power.off()
-    return temp, humid
+def log_temps(sensor):
+    graph.packer.append(floats=(sensor.temperature, sensor.humidity), bools=bools())
 
 
 def bools():
     from . import irrigation
 
-    return valve.state, irrigation.watering, irrigation.auto_mode
-
-
-async def read_sensor_loop():
-    global soil_temperature, soil_humidity
-    silent_count = 0  # don't keep stale readings indefinitely
-    while True:
-        try:
-            soil_temperature, soil_humidity = await read_sensor()
-            silent_count = 0
-        except Exception as e:
-            logger.exc("Read sensor failed: {}".format(e))
-            silent_count += 1
-            if silent_count > 10:
-                soil_temperature, soil_humidity = None, None
-            continue
-        graph.packer.append(floats=(soil_temperature, soil_humidity), bools=bools())
-        await asyncio.sleep(60)
+    return (
+        valve.state(),
+        irrigation.auto_waterer.watering,
+        irrigation.auto_waterer.auto_mode,
+    )
 
 
 def status():
     from . import irrigation
 
     state = {
-        "valve": valve.state,
-        "mode": "auto" if irrigation.auto_mode else "manual",
-        "soil_temperature": soil_temperature,
-        "soil_humidity": soil_humidity,
-        "watering": irrigation.watering,
+        "valve": valve.state(),
+        "mode": "auto" if irrigation.auto_waterer.auto_mode else "manual",
+        "soil_temperature": temp_sensor.soil_temperature,
+        "soil_humidity": temp_sensor.soil_humidity,
+        "watering": irrigation.auto_waterer.watering,
     }
-    # power.off()
     return state
 
 
+valve = Valve(en, in1, in2)
+clk = Pin(18)
+data = Pin(17)
+power = Pin(19, Pin.OUT)
+sensor = SHT1x(data, clk)
+temp_sensor = TempSensor("sens1", sensor, power, logf=log_temps)
+
+
 def init(loop):
-    loop.create_task(read_sensor_loop())
-    valve.state = False
+    temp_sensor.init(loop)
+    valve.state(False)

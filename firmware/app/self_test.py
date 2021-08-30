@@ -30,15 +30,15 @@ async def run_test(testfn, name):
 async def test_valve():
     from .hal import valve
 
-    assert not valve.state
-    valve.state = True
+    assert not valve.state()
+    valve.state() = True
     await asyncio.sleep_ms(100)
     assert valve.en(), "Not enabled"
     assert valve.in1(), "Not in1"
     assert not valve.in2(), "in2"
     await asyncio.sleep(1)
     assert not valve.en(), "Still enabled"
-    valve.state = False
+    valve.state() = False
     await asyncio.sleep_ms(100)
     assert valve.en(), "Not enabled"
     assert not valve.in1(), "in1"
@@ -53,14 +53,14 @@ async def test_watering():
 
     wld = irrigation.WATER_LOOP_DELAY
     irrigation.WATER_LOOP_DELAY = 1
-    assert not valve.state, "valve one"
-    assert not irrigation.watering, "watering"
+    assert not valve.state(), "valve one"
+    assert not irrigation.auto_waterer.watering(), "watering"
     watering = True
     await asyncio.sleep(1)
-    assert valve.state, "valve not on"
+    assert valve.state(), "valve not on"
     watering = False
     await asyncio.sleep(1)
-    assert not valve.state, "valve not off"
+    assert not valve.state(), "valve not off"
     irrigation.WATER_LOOP_DELAY = wld
 
 
@@ -73,8 +73,8 @@ async def test_schedule_watering():
     now[5] = settings.get("watering hours")[0]
     clock.rtc.datetime(now)
     await asyncio.sleep(1)
-    assert irrigation.watering
-    irrigation.watering = False
+    assert irrigation.auto_waterer.watering()
+    irrigation.auto_waterer.watering(False)
     clock.clock_syncing = True
     clock.ntptime.settime()
 

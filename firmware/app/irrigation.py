@@ -5,59 +5,96 @@ from . import hal
 import logging
 from sys import print_exception
 
-logger = logging.getLogger("irrigation")
 
-auto_mode = True
-watering = False
-WATER_LOOP_DELAY = 60
+class AutoWaterer:
+    def __init__(self, name, sensor, valve, loop_delay=60):
+        self.name = name
+        self.loop_delay = loop_delay
+        self._watering = False
+        self._auto_mode = True
+        self.sensor = sensor
+        self.valve = valve
+        self.logger = logging.getSelf.Logger(__name__)
+
+    def auto_mode(self, val=None):
+        if val:
+            self._auto_mode = True
+        elif val is False:
+            self._auto_mode = False
+        return self._auto_mode
+
+    def watering(self, val=None):
+        if val:
+            self._watering = True
+        elif val is False:
+            self._watering = False
+        return self._watering
 
 
-async def schedule_loop():
-    global watering
-    while True:
-        h, m = localtime()[3:5]
-        if h == settings.get("watering hours", [6, 21]) and not m:
-            logger.info("Schedule watering")
-            watering = True
-        await asyncio.sleep(60)
+    @property
+    def lower_humidity(self):
+        return settings.get("{}/lower_humidity_threshold".format(self.name), 65)
+
+    @property
+    def upper_humidity(self):
+        return settings.get("{}/upper_humidity_threshold".format(self.name), 65)
+
+    @property
+    def watering_hours(self):
+        return settings.get("{}/watering_hours", [6, 12])
+
+    @property
+    def watering_minutes(self):
+        return settings.get("{}/watering_minutes", 30)
+
+    async def schedule_loop(self):
+        while True:
+            h, m = localtime()[3:5]
+            if h == self.watering_hours and not m:
+                self.logger.info("Scheduling watering")
+                self.watering = True
+            await asyncio.sleep(60)
+
+    async def auto_water_loop(self):
+        while True:
+            elapsed = 0
+            while self.auto_mode:
+                try:
+                    if not self.valve.state():
+                        if self.watering and self.sensor.humidity < self.lower_humidity:
+                            self.logger.info("Started watering")
+                            self.valve.state(True)
+                            elapsed += 0.5 / 60
+
+                        await asyncio.sleep_ms(500)
+                        continue
+
+                    else:
+                        if (
+                            self.sensor.humidity > self.upper_humidity
+                            or elapsed > self.watering_minutes:
+                        ):
+                            self.logger.info("Stopped watering")
+                            self.valve.state(False)
+                            self.watering = False
+                            elapsed = 0
+                        elapsed += WATER_LOOP_DELAY / 60
+
+                except Exception as e:
+                    self.logger.exc(e, "Error in watering loop")
+
+                await asyncio.sleep(self.delay)
+
+            while not self.auto_mode:
+                await asyncio.sleep_ms(100)
+
+    def init(self, loop):
+        loop.create_task(self.auto_water_loop())
+        loop.create_task(self.schedule_loop())
 
 
-async def auto_water_loop():
-    global watering
-    while True:
-        elapsed = 0
-        while auto_mode:
-            try:
-                if not hal.valve.state:
-                    if watering and hal.soil_humidity < settings.get(
-                        "lower_humidity_threshold", 65
-                    ):
-                        logger.info("Started watering")
-                        hal.valve.state = True
-                        elapsed += 0.5 / 60
-
-                    await asyncio.sleep_ms(500)
-                    continue
-
-                else:
-                    if hal.soil_humidity > settings.get(
-                        "upper_humidity_threshold", 70
-                    ) or elapsed > settings.get("watering_minutes", 30):
-                        logger.info("Stopped watering")
-                        hal.valve.state = False
-                        watering = False
-                        elapsed = 0
-                    elapsed += WATER_LOOP_DELAY / 60
-
-            except Exception as e:
-                print_exception(e)
-
-            await asyncio.sleep(WATER_LOOP_DELAY)
-
-        while not auto_mode:
-            await asyncio.sleep_ms(100)
+auto_waterer = AutoWaterer()
 
 
 def init(loop):
-    loop.create_task(auto_water_loop())
-    loop.create_task(schedule_loop())
+    auto_waterer.init(loop)
