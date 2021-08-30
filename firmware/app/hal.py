@@ -56,7 +56,7 @@ class TempSensor:
 
     @property
     def power_down(self):
-        return settings.get("{}/power_down_sensor".format(self.name), True)
+        return settings.get("{}--power_down_sensor".format(self.name), True)
 
     async def read_sensor(self):
         self.power.on()
