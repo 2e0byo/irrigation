@@ -56,14 +56,16 @@ def index(req, resp):
 @app.route("/api/status")
 @cors
 def format_status(req, resp, headers=None):
+    status = "200"
     try:
         state = status()
     except Exception as e:
         print_exception(e)
-        state = {"exception": e}
+        state = {"error": e}
+        status = "500"
     encoded = json.dumps(state)
     yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
+        resp, content_type="application/json", headers=headers, status=status
     )
     yield from resp.awrite(encoded)
 
@@ -81,54 +83,55 @@ async def selftest(req, resp, headers=None):
         await picoweb.start_response(
             resp, content_type="application/json", headers=headers
         )
-        await res.awrite(json.dumps(state))
+        await resp.awrite(json.dumps(state))
+
+
+def settable(var, req, resp, headers=None):
+    status = "200"
+    if req.method == "PUT":
+        if not req.url_match.group(1):
+            encoded = json.dumps(
+                {"error": "No state supplied.  Please use GET to get status."}
+            )
+            status = "403"
+        else:
+            var = True if req.url_match.group(1) == "on" else False
+    encoded = json.dumps({"value": var})
+
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers, status=status
+    )
+    yield from resp.awrite(encoded)
 
 
 @app.route(re.compile("/api/auto-mode/(on|off|)"))
 @cors
 def mode(req, resp, headers=None):
-    if req.method == "PUT":
-        if req.url_match.group(1) == "manual":
-            irrigation.auto_mode = False
-        elif req.url_match.group(1) == "auto":
-            irrigation.auto_mode = True
-    encoded = json.dumps({"mode": "auto" if irrigation.auto_mode else "manual"})
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite(encoded)
+    yield from settable(irrigation.auto_mode, req, resp, headers)
 
 
 @app.route(re.compile("/api/watering/(on|off|)"))
 @cors
 def watering(req, resp, headers=None):
-    if req.method == "PUT":
-        irrigation.watering = True if req.url_match.group(1) == "on" else False
-    encoded = json.dumps({"watering": irrigation.watering})
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite(encoded)
+    yield from settable(irrigation.watering, req, resp, headers)
 
 
 @app.route(re.compile("/api/valve/(on|off|)"))
 @cors
 def control_valve(req, resp, headers=None):
-    if req.method == "PUT":
-        state = True if req.url_match.group(1) == "on" else False
-        hal.valve.state = state
-    encoded = json.dumps({"valve": hal.valve.state})
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite(encoded)
+    yield from settable(hal.valve.state, req, resp, headers)
 
 
 @app.route(re.compile("^/api/settings/(.*)/(.*|)"))
 @cors
 def setting(req, resp, headers=None):
+    status = "200"
     k = req.url_match.group(1)
-    if req.method == "PUT":
+    if k not in settings.settings:
+        status = "400"
+        encoded = {"error": "Supplied setting {} not found".format(k)}
+
+    if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
         try:
             v = float(v)
@@ -148,10 +151,11 @@ def setting(req, resp, headers=None):
             encoded = json.dumps({k: v})
         except Exception as e:
             encoded = json.dumps({"Error", e})
-    else:
+            status = "400"
+    elif status == "200":
         encoded = json.dumps({k: settings.get(k)})
     yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
+        resp, content_type="application/json", headers=headers, status=status
     )
     yield from resp.awrite(encoded)
 
