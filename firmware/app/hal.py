@@ -12,12 +12,14 @@ in2 = Pin(21, Pin.OUT)
 
 
 class Valve:
-    def __init__(self, en, in1, in2):
+    def __init__(self, name, en, in1, in2):
         self.en = en
         self.in1 = in1
         self.in2 = in2
         self.en.off()
         self._state = False
+        self.name = name
+        self._logger = logging.getLogger(self.name)
 
     async def _open(self):
         self.en.off()
@@ -26,6 +28,7 @@ class Valve:
         self.en.on()
         await asyncio.sleep(1)
         self.en.off()
+        self._logger.info("Opened valve.")
 
     async def _close(self):
         self.en.off()
@@ -34,6 +37,7 @@ class Valve:
         self.en.on()
         await asyncio.sleep(1)
         self.en.off()
+        self._logger.info("Closed valve.")
 
     def state(self, val=None):
         if val:
@@ -115,7 +119,7 @@ def status():
     return state
 
 
-valve = Valve(en, in1, in2)
+valve = Valve("valve1", en, in1, in2)
 clk = Pin(18)
 data = Pin(17)
 power = Pin(19, Pin.OUT)
