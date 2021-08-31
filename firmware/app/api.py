@@ -53,16 +53,19 @@ def index(req, resp):
     yield from app.render_template(resp, "index.html", (report_status(),))
 
 
-@app.route("/api/status")
+@app.route(re.compile("/api/status/(.*|)"))
 @cors
 def format_status(req, resp, headers=None):
     status = "200"
     try:
         state = report_status()
+        if req.url_match.group(1):
+            state = state[req.url_match.group(1)]
     except Exception as e:
         print_exception(e)
         state = {"error": e}
         status = "500"
+
     encoded = json.dumps(state)
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
@@ -70,7 +73,7 @@ def format_status(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route("/api/self-test")
+@app.route("/api/self-test/")
 async def selftest(req, resp, headers=None):
     try:
         from . import self_test
@@ -163,12 +166,13 @@ def setting(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
-@app.route("/api/log")
+@app.route("/api/log/")
 @cors
 def graph_log(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
+    print("skip is", skip)
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers
@@ -192,12 +196,13 @@ def graph_log(req, resp, headers=None):
     gc.collect()
 
 
-@app.route("/api/syslog")
+@app.route("/api/syslog/")
 @cors
 def syslog(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
+    print(req.form.keys(), skip)
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers
@@ -213,7 +218,7 @@ def syslog(req, resp, headers=None):
     yield from resp.awrite("]")
 
 
-@app.route("/api/repl")
+@app.route("/api/repl/")
 @cors
 async def fallback(req, resp, headers=None):
     with open("/fallback", "w") as f:
