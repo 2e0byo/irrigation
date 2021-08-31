@@ -34,14 +34,14 @@ def preflight(req, resp):
 def cors(f):
     def _cors(req, resp):
         if req.method == "OPTIONS":
-            logger.debug("preflighting")
+            # logger.debug("preflighting")
             yield from preflight(req, resp)
         elif b"Origin" in req.headers:
-            logger.debug("setting headers")
+            # logger.debug("setting headers")
             headers = preflight_headers(req)
             yield from f(req, resp, headers)
         else:
-            logger.debug("no CORS, calling {}".format(f.__name__))
+            # logger.debug("no CORS, calling {}".format(f.__name__))
             yield from f(req, resp)
 
     return _cors
