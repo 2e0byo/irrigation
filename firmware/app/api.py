@@ -249,7 +249,7 @@ def report_status():
 
 
 async def run_app():
-    app.run(debug=0, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
+    app.run(debug=-1, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
 
 
 def init(loop):
