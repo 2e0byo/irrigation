@@ -241,6 +241,16 @@ def countdown():
     asyncio.get_event_loop().create_task(_fallback())
 
 
+@app.route("/api/runtime/")
+@cors
+def runtime(req, resp, headers=None):
+    encoded = json.dumps({"value": clock.timestr(clock.runtime())})
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(encoded)
+
+
 def report_status():
     report = hal.status()
     report["runtime"] = clock.timestr(clock.runtime())
