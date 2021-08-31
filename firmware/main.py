@@ -24,19 +24,20 @@ try:
         level=logging.DEBUG,
     )
     logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
     sh = logging.StreamHandler(stdout)
     sh.setFormatter(
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
     )
-    logger.addHandler(sh)
+    logging.root.handlers.clear()
+    logging.root.addHandler(sh)
+    # logger.addHandler(sh)
     logger.debug("Logger initialised")
 
     fallback_connect()
     print("import log")
     from app import log
 
-    logger.addHandler(log.rotating_handler)
+    logging.root.addHandler(log.rotating_handler)
     logger.debug("Attached persistent handler")
 
     print("import app")
