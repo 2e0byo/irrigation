@@ -172,7 +172,6 @@ def graph_log(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
-    print("skip is", skip)
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers
@@ -202,7 +201,6 @@ def syslog(req, resp, headers=None):
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
-    print(req.form.keys(), skip)
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers
