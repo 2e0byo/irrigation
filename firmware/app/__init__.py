@@ -66,6 +66,8 @@ def start(logger):
             i += 1
     if i == 100:
         logger.warning("Failed to sync clock.")
+    if clock.clock_synced():
+        clock.boot_time = clock.localtime()
 
     hal.init(loop)
     irrigation.init(loop)
