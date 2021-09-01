@@ -7,7 +7,7 @@ rotating_log = RotatingLog(
     "/app/static/",
     log_lines=settings.get("syslog_lines", 200),
     keep_logs=2,
-    timestamp=False,
+    timestamp=True,
 )
 
 
@@ -24,5 +24,5 @@ class RotatingLogHandler(logging.Handler):
 rotating_handler = RotatingLogHandler(rotating_log)
 rotating_handler.setLevel(logging.INFO)
 rotating_handler.setFormatter(
-    logging.Formatter("%(asctime)s - %(name)s - %(levelname)s: %(message)s")
+    logging.Formatter("%(name)s - %(levelname)s: %(message)s")
 )

@@ -207,10 +207,10 @@ def syslog(req, resp, headers=None):
     )
     yield from resp.awrite("[")
     started = False
-    for line in log.rotating_log.read(n=n, skip=skip):
+    for timestamp, line in log.rotating_log.read(n=n, skip=skip):
         if started:
             yield from resp.awrite(",")
-        yield from resp.awrite(json.dumps({"line": line}))
+        yield from resp.awrite(json.dumps({"line": line, "timestamp": timestamp}))
         started = True
 
     yield from resp.awrite("]")
