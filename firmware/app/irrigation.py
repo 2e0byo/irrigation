@@ -49,7 +49,7 @@ class AutoWaterer:
     async def schedule_loop(self):
         while True:
             h, m = localtime()[3:5]
-            if h == self.watering_hours and m == 1:
+            if h in self.watering_hours and m == 1:
                 self.logger.info("Scheduling watering")
                 self.watering(True)
             await asyncio.sleep(60)
