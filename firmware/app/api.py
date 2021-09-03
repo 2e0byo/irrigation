@@ -188,6 +188,7 @@ def graph_log(req, resp, headers=None):
             "watering": reading.bools[1],
             "auto_mode": reading.bools[2],
             "timestamp": reading.timestamp,
+            "id": reading.id,
         }
         yield from resp.awrite("{}".format(json.dumps(enc)))
         started = True
@@ -207,10 +208,12 @@ def syslog(req, resp, headers=None):
     )
     yield from resp.awrite("[")
     started = False
-    for timestamp, line in log.rotating_log.read(n=n, skip=skip):
+    for i, timestamp, line in log.rotating_log.read(n=n, skip=skip):
         if started:
             yield from resp.awrite(",")
-        yield from resp.awrite(json.dumps({"line": line, "timestamp": timestamp}))
+        yield from resp.awrite(
+            json.dumps({"line": line, "timestamp": timestamp, "id": i})
+        )
         started = True
 
     yield from resp.awrite("]")
