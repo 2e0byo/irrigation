@@ -44,7 +44,7 @@ class AutoWaterer:
 
     @property
     def watering_minutes(self):
-        return settings.get("{}--watering_minutes", format(self.name), 30)
+        return settings.get("{}--watering_minutes".format(self.name), 30)
 
     async def schedule_loop(self):
         while True:
