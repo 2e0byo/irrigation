@@ -131,7 +131,7 @@ def control_valve(req, resp, headers=None):
 
 def convert_vals(v):
     vs = v.split(",")
-    for v in vs:
+    for i, v in enumerate(vs):
         try:
             v = float(v)
         except ValueError:
@@ -144,6 +144,7 @@ def convert_vals(v):
             v = True
         if v == "false":
             v = False
+        vs[i] = v
     if len(vs) == 1:
         return vs[0]
     else:
