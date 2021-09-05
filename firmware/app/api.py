@@ -150,7 +150,16 @@ def convert_vals(v):
         return vs
 
 
-@app.route(re.compile("^/api/settings/(.*)/(.*|)"))
+@app.route("/api/settings/")
+@cors
+def allsettings(req, resp, headers=None):
+    yield from picoweb.start_response(
+        resp, content_type="application/json", headers=headers
+    )
+    yield from resp.awrite(json.dumps(settings.settings))
+
+
+@app.route(re.compile("^/api/settings/(.+)/(.*|)"))
 @cors
 def setting(req, resp, headers=None):
     status = "200"
