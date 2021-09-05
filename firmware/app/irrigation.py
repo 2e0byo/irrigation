@@ -1,7 +1,7 @@
 import uasyncio as asyncio
 from time import localtime
-from . import settings
 from . import hal
+from .settings import settings
 import logging
 from sys import print_exception
 

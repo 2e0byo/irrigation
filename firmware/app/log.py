@@ -1,6 +1,6 @@
 import logging
 from packing.text import RotatingLog
-from . import settings
+from .settings import settings
 
 rotating_log = RotatingLog(
     "log",

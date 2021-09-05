@@ -1,5 +1,5 @@
 from packing.packed import PackedRotatingLog
-from . import settings
+from .settings import settings
 
 packer = PackedRotatingLog(
     "readings",

@@ -65,7 +65,8 @@ async def test_watering():
 
 
 async def test_schedule_watering():
-    from . import clock, irrigation, settings
+    from . import clock, irrigation
+    from .settings import settings
 
     clock.clock_syncing = False
     now = clock.rtc.now()

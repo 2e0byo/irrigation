@@ -2,7 +2,8 @@ from machine import Pin
 import uasyncio as asyncio
 from sht1x import SHT1x
 import logging
-from . import settings, graph
+from . import graph
+from .settings import settings
 
 logger = logging.getLogger("Hal")
 

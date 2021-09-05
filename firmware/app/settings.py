@@ -1,32 +1,33 @@
 from json import load, dump
 
-settings_file = "settings.json"
-settings = {}
+
+class Settings:
+    def __init__(self, fn):
+        self.fn = fn
+        self.settings = {}
+        try:
+            self.load_settings()
+        except Exception:
+            self.set("created", True)
+
+    def load_settings(self):
+        with open(self.fn, "r") as f:
+            self.settings = load(f)
+
+    def set(self, k, v):
+        self.settings[k] = v
+        with open(self.fn, "w") as f:
+            dump(self.settings, f)
+
+    def get(self, k, fallback=None):
+        try:
+            return self.settings[k]
+        except KeyError:
+            if fallback:
+                self.set(k, fallback)
+                return fallback
+            else:
+                raise ValueError("No such setting: {}".format(k))
 
 
-def load_settings():
-    global settings
-    with open(settings_file, "r") as f:
-        settings = load(f)
-
-
-def set(k, v):
-    settings[k] = v
-    with open(settings_file, "w") as f:
-        dump(settings, f)
-
-
-def get(k, fallback=None):
-    try:
-        return settings[k]
-    except KeyError:
-        set(k, fallback)
-        return fallback
-
-
-def init():
-    try:
-        load_settings()
-    except Exception:
-        set("created", True)
-        load_settings()
+settings = Settings("settings.json")
