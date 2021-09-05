@@ -9,7 +9,8 @@ import utemplate.recompile
 
 import uasyncio as asyncio
 
-from . import hal, irrigation, clock, settings, graph, log
+from . import hal, irrigation, clock, graph, log
+from .settings import settings
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
