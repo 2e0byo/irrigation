@@ -28,11 +28,6 @@ def start(logger):
     reset_cause = reset_causes[machine.reset_cause() - 1]
     logger.info("Booting up, reason is {}".format(reset_cause))
 
-    print("Loading setting.")
-    from . import settings
-
-    settings.init()
-
     print("Loading Hal")
     from . import hal
 
