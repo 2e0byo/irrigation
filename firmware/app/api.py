@@ -128,6 +128,27 @@ def control_valve(req, resp, headers=None):
     yield from settable(hal.valve.state, req, resp, headers)
 
 
+def convert_vals(v):
+    vs = v.split(",")
+    for v in vs:
+        try:
+            v = float(v)
+        except ValueError:
+            pass
+        try:
+            v = int(v)
+        except ValueError:
+            pass
+        if v == "true":
+            v = True
+        if v == "false":
+            v = False
+    if len(vs) == 1:
+        return vs[0]
+    else:
+        return vs
+
+
 @app.route(re.compile("^/api/settings/(.*)/(.*|)"))
 @cors
 def setting(req, resp, headers=None):
@@ -139,27 +160,18 @@ def setting(req, resp, headers=None):
 
     if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
-        try:
-            v = float(v)
-        except ValueError:
-            pass
-        try:
-            v = int(v)
-        except ValueError:
-            pass
-        if v == "True":
-            v = True
-        if v == "False":
-            v = False
+        v = convert_vals(v)
 
         try:
             settings.set(k, v)
-            encoded = json.dumps({k: v})
+            encoded = json.dumps({"value": v})
         except Exception as e:
             encoded = json.dumps({"Error", e})
             status = "400"
+
     elif status == "200":
         encoded = json.dumps({"value": settings.get(k)})
+
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
     )
