@@ -166,7 +166,7 @@ def setting(req, resp, headers=None):
     k = req.url_match.group(1)
     if k not in settings.settings:
         status = "400"
-        encoded = {"error": "Supplied setting {} not found".format(k)}
+        response = {"error": "Supplied setting {} not found".format(k)}
 
     if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
@@ -174,18 +174,18 @@ def setting(req, resp, headers=None):
 
         try:
             settings.set(k, v)
-            encoded = json.dumps({"value": v})
+            response = {"value": v}
         except Exception as e:
-            encoded = json.dumps({"Error", e})
+            response = {"Error", e}
             status = "400"
 
     elif status == "200":
-        encoded = json.dumps({"value": settings.get(k)})
+        response = {"value": settings.get(k)}
 
     yield from picoweb.start_response(
         resp, content_type="application/json", headers=headers, status=status
     )
-    yield from resp.awrite(encoded)
+    yield from resp.awrite(json.dumps(response))
 
 
 @app.route("/api/log/")
