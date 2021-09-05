@@ -15,6 +15,12 @@ class AutoWaterer:
         self.sensor = sensor
         self.valve = valve
         self.logger = logging.getLogger(self.name)
+        # populate settings on init in case needed elsewhere
+        # e.g. for api/web status page
+        self.lower_humidity
+        self.upper_humidity
+        self.watering_hours
+        self.watering_minutes
 
     def auto_mode(self, val=None):
         if val:
