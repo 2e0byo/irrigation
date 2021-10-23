@@ -27,7 +27,7 @@ class Settings:
                 self.set(k, fallback)
                 return fallback
             else:
-                raise ValueError("No such setting: {}".format(k))
+                raise KeyError("No such setting: {}".format(k))
 
 
 settings = Settings("settings.json")
