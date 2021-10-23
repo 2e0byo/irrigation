@@ -150,9 +150,7 @@ def setting(req, resp, headers=None):
 
     if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
-        print("got", v)
         v = convert_vals(v)
-        print("converted", v)
 
         try:
             settings.set(k, v)
