@@ -2,9 +2,11 @@ from time import sleep
 from sys import print_exception
 import uos
 
-if "fallback" in uos.listdir("/"):
-    uos.remove("/fallback")
+try:
+    uos.remove("/.fallback")
     raise Exception("Falling back to repl this once")
+except OSError:
+    pass
 
 
 def start(logger):

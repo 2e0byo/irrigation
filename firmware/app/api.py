@@ -226,7 +226,7 @@ def syslog(req, resp, headers=None):
 @app.route("/api/repl/")
 @cors
 async def fallback(req, resp, headers=None):
-    with open("/fallback", "w") as f:
+    with open("/.fallback", "w") as f:
         f.write("")
     countdown()
     encoded = json.dumps({"status": "Falling back in 10s"})
