@@ -2,6 +2,15 @@ from machine import Pin
 from sys import stdout, print_exception
 
 
+def soft_reset():
+    import sys
+
+    for k in sys.modules:
+        del sys.modules[k]
+
+    print("Unimported everything")
+
+
 def fallback_connect():
     import secrets
     import network
