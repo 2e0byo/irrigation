@@ -43,6 +43,16 @@ try:
     logger.debug("Logger initialised")
 
     fallback_connect()
+
+    import uos
+
+    if ".runsafe" in uos.listdir("/"):
+        WAIT_SAFE_SECONDS = 20
+        print("Waiting {} seconds for webrepl connection.".format(WAIT_SAFE_SECONDS))
+        import time
+
+        time.sleep(WAIT_SAFE_SECONDS)
+
     print("import log")
     from app import log
 

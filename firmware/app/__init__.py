@@ -1,12 +1,21 @@
 from time import sleep
 from sys import print_exception
 import uos
+import uasyncio as asyncio
 
 try:
     uos.remove("/.fallback")
     raise Exception("Falling back to repl this once")
 except OSError:
     pass
+
+
+async def wait_safe():
+    await asyncio.sleep(60 * 10)
+    try:
+        uos.remove("/.runsafe")
+    except OSError:
+        pass
 
 
 def start(logger):
@@ -72,6 +81,7 @@ def start(logger):
     gc.threshold(gc.mem_free() // 4 + gc.mem_alloc())
 
     logger.info("Everything started.")
+    loop.create_task(wait_safe())
 
     try:
         loop.run_forever()

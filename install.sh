@@ -3,6 +3,7 @@ set -e
 hostname=$(cat ../.hostname)
 password=$(cat ../.password)
 mpfshell -o ws:$hostname,$password -n -c "putc $2"
+mpfshell -o ws:$hostname,$password -n -c "put .runsafe"
 port="/dev/ttyUSB0"
 # mpfshell -o ser:$port -n -c "putc $2"
 mkdir -p "$1"
