@@ -22,12 +22,16 @@ class Valve:
         self.name = name
         self._logger = logging.getLogger(self.name)
 
+    @property
+    def pulse_duration(self):
+        return settings.get("{}--pulse_duration".format(self.name), 1)
+
     async def _open(self):
         self.en.off()
         self.in1.on()
         self.in2.off()
         self.en.on()
-        await asyncio.sleep(1)
+        await asyncio.sleep(self.pulse_duration)
         self.en.off()
         self._logger.info("Opened valve.")
 
@@ -36,7 +40,7 @@ class Valve:
         self.in1.off()
         self.in2.on()
         self.en.on()
-        await asyncio.sleep(1)
+        await asyncio.sleep(self.pulse_duration)
         self.en.off()
         self._logger.info("Closed valve.")
 
