@@ -11,6 +11,7 @@ import uasyncio as asyncio
 
 from . import hal, irrigation, clock, graph, log
 from .settings import settings
+from .util import convert_vals
 
 app = picoweb.WebApp(__name__)
 app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
@@ -129,28 +130,6 @@ def control_valve(req, resp, headers=None):
     yield from settable(hal.valve.state, req, resp, headers)
 
 
-def convert_vals(v):
-    vs = v.split(",")
-    for i, v in enumerate(vs):
-        try:
-            v = float(v)
-        except ValueError:
-            pass
-        try:
-            v = int(v)
-        except ValueError:
-            pass
-        if v == "true":
-            v = True
-        if v == "false":
-            v = False
-        vs[i] = v
-    if len(vs) == 1:
-        return vs[0]
-    else:
-        return vs
-
-
 @app.route("/api/settings/")
 @cors
 def allsettings(req, resp, headers=None):
@@ -160,7 +139,7 @@ def allsettings(req, resp, headers=None):
     yield from resp.awrite(json.dumps(settings.settings))
 
 
-@app.route(re.compile("^/api/settings/(.+)/(.*|)"))
+@app.route(re.compile("^/api/settings/(.+)/(.*)"))
 @cors
 def setting(req, resp, headers=None):
     status = "200"
@@ -171,7 +150,9 @@ def setting(req, resp, headers=None):
 
     if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
+        print("got", v)
         v = convert_vals(v)
+        print("converted", v)
 
         try:
             settings.set(k, v)
