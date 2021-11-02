@@ -69,7 +69,8 @@ class TempSensor:
 
     async def read_sensor(self):
         self.power.on()
-        await asyncio.sleep_ms(200)
+        if self.power_down:
+            await asyncio.sleep_ms(200)
         # these are pretty instantaneous
         self.temperature = self.sensor.read_temperature()
         self.humidity = self.sensor.read_humidity()
