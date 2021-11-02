@@ -37,6 +37,10 @@ class AutoWaterer:
         return self._watering
 
     @property
+    def lower_temperature(self):
+        return settings.get("{}--lower_temperature".format(self.name), 5)
+
+    @property
     def lower_humidity(self):
         return settings.get("{}--lower_humidity_threshold".format(self.name), 65)
 
@@ -69,6 +73,7 @@ class AutoWaterer:
                         if (
                             self.watering()
                             and self.sensor.humidity < self.lower_humidity
+                            and self.sensor.temperature > self.lower_temperature
                         ):
                             self.logger.info(
                                 "Started watering humidity {} < {}".format(
