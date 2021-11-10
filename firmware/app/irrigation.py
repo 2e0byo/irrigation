@@ -22,12 +22,13 @@ class AutoWaterer:
         self.watering_hours
         self.watering_minutes
 
-    def auto_mode(self, val=None):
-        if val:
-            self._auto_mode = True
-        elif val is False:
-            self._auto_mode = False
-        return self._auto_mode
+    @property
+    def auto_mode(self):
+        return settings.get("{}--auto_mode".format(self.name), True)
+
+    @auto_mode.setter
+    def auto_mode(self, val):
+        return settings.set("{}--auto_mode".format(self.name), val)
 
     def watering(self, val=None):
         if val:
