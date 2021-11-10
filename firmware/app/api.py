@@ -112,10 +112,22 @@ def settable(f, req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
+def property_wrapper(obj, prop):
+    def f(val=None):
+        if val:
+            setattr(obj, prop, val)
+        else:
+            return getattr(obj, prop)
+
+    return f
+
+
 @app.route(re.compile("/api/auto-mode/(True|False|)"))
 @cors
 def auto_mode(req, resp, headers=None):
-    yield from settable(irrigation.auto_waterer.auto_mode, req, resp, headers)
+    yield from settable(
+        property_wrapper(irrigation.auto_waterer, "auto_mode"), req, resp, headers
+    )
 
 
 @app.route(re.compile("/api/watering/(True|False|)"))
