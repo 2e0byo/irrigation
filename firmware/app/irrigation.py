@@ -103,6 +103,8 @@ class AutoWaterer:
 
                 await asyncio.sleep(self.loop_delay)
 
+            self.logger.info("Stopped watering loop.")
+
             while not self.auto_mode:
                 await asyncio.sleep_ms(100)
 
