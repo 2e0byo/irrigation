@@ -108,7 +108,7 @@ def bools():
     return (
         valve.state(),
         irrigation.auto_waterer.watering(),
-        irrigation.auto_waterer.auto_mode(),
+        irrigation.auto_waterer.auto_mode,
     )
 
 
@@ -120,7 +120,7 @@ def status():
         "soil_temperature": temp_sensor.temperature,
         "soil_humidity": temp_sensor.humidity,
         "watering": irrigation.auto_waterer.watering(),
-        "auto_mode": irrigation.auto_waterer.auto_mode(),
+        "auto_mode": irrigation.auto_waterer.auto_mode,
     }
     return state
 

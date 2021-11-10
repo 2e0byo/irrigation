@@ -11,7 +11,6 @@ class AutoWaterer:
         self.name = name
         self.loop_delay = loop_delay
         self._watering = False
-        self._auto_mode = True
         self.sensor = sensor
         self.valve = valve
         self.logger = logging.getLogger(self.name)
