@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import json
 import operator
 from datetime import datetime
@@ -7,7 +9,8 @@ from sys import stdout
 import requests
 
 HOSTNAME = "irrigation.lan"
-logf = Path("data.json")
+logf = Path(__file__).parent / "data.json"
+
 
 data = None
 
@@ -39,7 +42,7 @@ def load():
 
 
 def save():
-    with logf.open() as f:
+    with logf.open("w") as f:
         json.dump(data, f)
 
 
