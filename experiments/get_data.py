@@ -2,7 +2,6 @@
 
 import json
 import operator
-from datetime import datetime
 from pathlib import Path
 from sys import stdout
 
@@ -54,10 +53,7 @@ def get(skip=0, n=None):
     url = "http://" + HOSTNAME + f"/api/log/?skip={skip}"
     if n:
         url += f"&n={n}"
-    records = requests.get(url).json()
-    for record in records:
-        record["timestamp"] = datetime(*record["timestamp"][:-1])
-    return records
+    return requests.get(url).json()
 
 
 def find_offset(target_id):
