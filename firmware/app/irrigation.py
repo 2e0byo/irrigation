@@ -1,9 +1,11 @@
-import uasyncio as asyncio
-from time import localtime
-from . import hal
-from .settings import settings
 import logging
 from sys import print_exception
+from time import localtime
+
+import uasyncio as asyncio
+
+from . import hal
+from .settings import settings
 
 
 class AutoWaterer:
@@ -20,6 +22,7 @@ class AutoWaterer:
         self.upper_humidity
         self.watering_hours
         self.watering_minutes
+        self.elapsed = 0
 
     @property
     def auto_mode(self):
@@ -64,38 +67,44 @@ class AutoWaterer:
                 self.watering(True)
             await asyncio.sleep(60)
 
+    def start_watering_condition(self):
+        return (
+            self.watering()
+            and self.sensor.humidity < self.lower_humidity
+            and self.sensor.temperature > self.lower_temperature
+        )
+
+    def stop_watering_condition(self):
+        return (
+            self.sensor.humidity > self.upper_humidity
+            or self.elapsed > self.watering_minutes
+        )
+
     async def auto_water_loop(self):
         while True:
-            elapsed = 0
+            self.elapsed = 0
             while self.auto_mode:
                 try:
                     if not self.valve.state():
-                        if (
-                            self.watering()
-                            and self.sensor.humidity < self.lower_humidity
-                            and self.sensor.temperature > self.lower_temperature
-                        ):
+                        if self.start_watering_condition():
                             self.logger.info(
                                 "Started watering humidity {} < {}".format(
                                     self.sensor.humidity, self.lower_humidity
                                 )
                             )
                             self.valve.state(True)
-                            elapsed += 0.5 / 60
+                            self.elapsed += 0.5 / 60
 
                         await asyncio.sleep_ms(500)
                         continue
 
                     else:
-                        if (
-                            self.sensor.humidity > self.upper_humidity
-                            or elapsed > self.watering_minutes
-                        ):
+                        if self.stop_watering_condition():
                             self.logger.info("Stopped watering")
                             self.valve.state(False)
                             self.watering(False)
-                            elapsed = 0
-                        elapsed += self.loop_delay / 60
+                            self.elapsed = 0
+                        self.elapsed += self.loop_delay / 60
 
                 except Exception as e:
                     self.logger.exc(e, "Error in watering loop")
