@@ -23,6 +23,7 @@ class AutoWaterer:
         self.watering_hours
         self.watering_minutes
         self.elapsed = 0
+        self._sensor_period = None
 
     @property
     def auto_mode(self):
@@ -35,7 +36,10 @@ class AutoWaterer:
     def watering(self, val=None):
         if val:
             self._watering = True
+            self._sensor_period = self.sensor.period
+            self.sensor.period = 10
         elif val is False:
+            self.sensor.period = self._sensor_period
             self._watering = False
         return self._watering
 
