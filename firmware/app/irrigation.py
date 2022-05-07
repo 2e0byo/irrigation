@@ -75,7 +75,7 @@ class AutoWaterer:
         )
 
     def stop_watering_condition(self):
-        return (
+        return self.watering() and (
             self.sensor.humidity > self.upper_humidity
             or self.elapsed > self.watering_minutes
         )
