@@ -1,7 +1,9 @@
-from machine import Pin
-import uasyncio as asyncio
-from sht1x import SHT1x
 import logging
+
+import uasyncio as asyncio
+from machine import Pin
+from sht1x import SHT1x
+
 from . import graph
 from .settings import settings
 
