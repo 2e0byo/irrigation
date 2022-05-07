@@ -57,13 +57,14 @@ class Valve:
 
 
 class TempSensor:
-    def __init__(self, name, sensor, power, logf=None):
+    def __init__(self, name, sensor, power, logf=None, period=60):
         self.name = name
         self.sensor = sensor
         self.power = power
         self.temperature = None
         self.humidity = None
         self.logf = logf
+        self.period = period
 
     @property
     def power_down(self):
@@ -94,7 +95,7 @@ class TempSensor:
                 continue
             if self.logf:
                 self.logf(self)
-            await asyncio.sleep(60)
+            await asyncio.sleep(self.period)
 
     def init(self, loop):
         loop.create_task(self.read_sensor_loop())
