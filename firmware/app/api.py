@@ -1,15 +1,14 @@
+import gc
 import logging
 import re
 from sys import print_exception
-import gc
 
 import picoweb
+import uasyncio as asyncio
 import ujson as json
 import utemplate.recompile
 
-import uasyncio as asyncio
-
-from . import hal, irrigation, clock, graph, log
+from . import clock, graph, hal, irrigation, log
 from .settings import settings
 from .util import convert_vals
 
@@ -266,6 +265,14 @@ def runtime(req, resp, headers=None):
     yield from resp.awrite(encoded)
 
 
+@app.route("/api/frequency/")
+@cors
+async def freq(req, resp, headers=None):
+    encoded = json.dumps({"value": hal.counter.frequency})
+    await picoweb.start_response(resp, content_type="application/json", headers=headers)
+    await resp.awrite(encoded)
+
+
 def report_status():
     report = hal.status()
     report["runtime"] = clock.timestr(clock.runtime())
@@ -274,7 +281,7 @@ def report_status():
 
 
 async def run_app():
-    app.run(debug=-1, host="0.0.0.0", port="80", log=logging.getLogger("picoweb"))
+    app.run(debug=-1, host="0.0.0.0", port="9874", log=logging.getLogger("picoweb"))
 
 
 def init(loop):

@@ -1,7 +1,7 @@
 import logging
 
 import uasyncio as asyncio
-from machine import Pin
+from machine import Pin, Timer
 from sht1x import SHT1x
 
 from . import graph
@@ -15,6 +15,9 @@ in2 = Pin(21, Pin.OUT)
 
 
 class Valve:
+    OPEN = 0
+    CLOSE = 1
+
     def __init__(self, name, en, in1, in2):
         self.en = en
         self.in1 = in1
@@ -28,30 +31,31 @@ class Valve:
     def pulse_duration(self):
         return settings.get("{}--pulse_duration".format(self.name), 1)
 
-    async def _open(self):
+    def _open(self):
         self.en.off()
         self.in1.on()
         self.in2.off()
         self.en.on()
-        await asyncio.sleep(self.pulse_duration)
-        self.en.off()
-        self._logger.info("Opened valve.")
 
-    async def _close(self):
+    def _close(self):
         self.en.off()
         self.in1.off()
         self.in2.on()
         self.en.on()
+
+    async def _pulse(self, direction):
+        on = direction == self.OPEN
+        self._open() if on else self._close()
         await asyncio.sleep(self.pulse_duration)
         self.en.off()
-        self._logger.info("Closed valve.")
+        self._logger.info(f"{'Opened' if on else 'Closed'} valve.")
 
     def state(self, val=None):
         if val:
-            asyncio.create_task(self._open())
+            asyncio.create_task(self._pulse(self.OPEN))
             self._state = True
         elif val is False:
-            asyncio.create_task(self._close())
+            asyncio.create_task(self._pulse(self.CLOSE))
             self._state = False
         return self._state
 
@@ -130,9 +134,33 @@ def status():
 valve = Valve("valve1", en, in1, in2)
 clk = Pin(18)
 data = Pin(17)
-power = Pin(19, Pin.OUT)
+power = Pin(5, Pin.OUT)
 sensor = SHT1x(data, clk)
 temp_sensor = TempSensor("sens1", sensor, power, logf=log_temps)
+
+
+class FreqCounter:
+    def __init__(self, pin, period_ms):
+        self._count = 0
+        self._total_count = 0
+        self.period_ms = period_ms
+        pin.irq(trigger=Pin.IRQ_FALLING, handler=self._incr)
+        timer = Timer(-1)
+        timer.init(period=period_ms, mode=Timer.PERIODIC, callback=self._total)
+
+    def _incr(self, *_):
+        self._count += 1
+
+    def _total(self, *_):
+        self._total_count = self._count
+        self._count = 0
+
+    @property
+    def frequency(self):
+        return 1_000 * self._total_count / self.period_ms
+
+
+counter = FreqCounter(Pin(19, Pin.IN), 1_000)
 
 
 def init(loop):
