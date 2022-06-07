@@ -86,15 +86,14 @@ class TempSensor:
             try:
                 await self.read_sensor()
                 silent_count = 0
+                if self.logf:
+                    self.logf(self)
             except Exception as e:
                 logger.exc(e, "Read sensor failed: {}")
                 silent_count += 1
                 if silent_count > 10:
                     self.soil_temperature = None
                     self.soil_humidity = None
-                continue
-            if self.logf:
-                self.logf(self)
             await asyncio.sleep(self.period)
 
     def init(self, loop):
