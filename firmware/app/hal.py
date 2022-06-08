@@ -164,7 +164,25 @@ class FreqCounter:
         return 1_000 * self._total_count / self.period_ms
 
 
-counter = FreqCounter(Pin(19, Pin.IN), 1_000)
+class FlowSensor(FreqCounter):
+    """A flow sensor e.g. for water or air."""
+
+    def __init__(self, *args, rate: float = 7.5):
+        """Initialise the sensor.
+
+        params:
+            rate (float): volume per hour / frequency. (default=7.5)
+        """
+        super().__init__(*args)
+        self._rate = rate
+
+    @property
+    def rate(self):
+        """Calculate the current flow rate."""
+        return self.frequency * self._rate
+
+
+flow_sensor = FlowSensor(Pin(19, Pin.IN), 1_000)
 
 
 def init(loop):
