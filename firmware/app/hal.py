@@ -140,7 +140,10 @@ temp_sensor = TempSensor("sens1", sensor, power, logf=log_temps)
 
 
 class FreqCounter:
+    """A frequency counter, depending on interrupts."""
+
     def __init__(self, pin, period_ms):
+        """Initialise the counter."""
         self._count = 0
         self._total_count = 0
         self.period_ms = period_ms
@@ -157,6 +160,7 @@ class FreqCounter:
 
     @property
     def frequency(self):
+        """Calculate the current frequency."""
         return 1_000 * self._total_count / self.period_ms
 
 
