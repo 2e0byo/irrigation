@@ -17,7 +17,7 @@ app.template_loader = utemplate.recompile.Loader(app.pkg, "templates")
 logger = logging.getLogger(__name__)
 
 
-def preflight_headers(req):
+def _preflight_headers(req):
     headers = {"Access-Control-Allow-Origin": req.headers[b"Origin"].decode()}
     for header in ("Access-Control-Request-Method", "Access-Control-Request-Headers"):
         if header.encode() in req.headers:
@@ -27,19 +27,21 @@ def preflight_headers(req):
     return headers
 
 
-def preflight(req, resp):
-    headers = preflight_headers(req)
+def _preflight(req, resp):
+    headers = _preflight_headers(req)
     yield from picoweb.start_response(resp, headers=headers)
 
 
 def cors(f):
+    """Provide CORS headers for this endpoint."""
+
     def _cors(req, resp):
         if req.method == "OPTIONS":
             # logger.debug("preflighting")
-            yield from preflight(req, resp)
+            yield from _preflight(req, resp)
         elif b"Origin" in req.headers:
             # logger.debug("setting headers")
-            headers = preflight_headers(req)
+            headers = _preflight_headers(req)
             yield from f(req, resp, headers)
         else:
             # logger.debug("no CORS, calling {}".format(f.__name__))
@@ -49,17 +51,26 @@ def cors(f):
 
 
 @app.route("/")
-def index(req, resp):
-    yield from picoweb.start_response(resp, content_type="text/html")
-    yield from app.render_template(resp, "index.html", (report_status(),))
+async def index(req, resp):
+    await picoweb.start_response(resp, content_type="text/html")
+    await app.render_template(resp, "index.html", (_report_status(),))
+
+
+async def json_response(resp, data: dict, headers=None, status=200):
+    """Return a JSON response."""
+    await picoweb.start_response(
+        resp, content_type="application/json", headers=headers, status=status
+    )
+    await resp.awrite(json.dumps(data))
 
 
 @app.route(re.compile("/api/status/(.*|)"))
 @cors
-def format_status(req, resp, headers=None):
+async def format_status(req, resp, headers=None):
+    """Return general status."""
     status = "200"
     try:
-        state = report_status()
+        state = _report_status()
         if req.url_match.group(1):
             state = state[req.url_match.group(1)]
     except Exception as e:
@@ -67,15 +78,12 @@ def format_status(req, resp, headers=None):
         state = {"error": e}
         status = "500"
 
-    encoded = json.dumps(state)
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers, status=status
-    )
-    yield from resp.awrite(encoded)
+    await json_response(resp, state, headers, status)
 
 
 @app.route("/api/self-test/")
 async def selftest(req, resp, headers=None):
+    """Run self-test routine."""
     try:
         from . import self_test
 
@@ -90,28 +98,25 @@ async def selftest(req, resp, headers=None):
         await resp.awrite(json.dumps(state))
 
 
-def settable(f, req, resp, headers=None):
+async def settable(f, req, resp, headers=None):
+    """Set a settable property."""
     status = "200"
-    encoded = None
+    data = None
     if req.method == "PUT":
         if not req.url_match.group(1):
-            encoded = json.dumps(
-                {"error": "No state supplied.  Please use GET to get status."}
-            )
+            data = {"error": "No state supplied.  Please use GET to get status."}
             status = "403"
         else:
-            f(True if req.url_match.group(1) == "True" else False)
+            f(True if req.url_match.group(1).lower() == "true" else False)
 
-    if not encoded:
-        encoded = json.dumps({"value": f()})
-
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers, status=status
-    )
-    yield from resp.awrite(encoded)
+    if not data:
+        data = {"value": f()}
+    await json_response(resp, data, headers, status)
 
 
 def property_wrapper(obj, prop):
+    """Treat a property like a function."""
+
     def f(val=None):
         if val:
             setattr(obj, prop, val)
@@ -121,43 +126,45 @@ def property_wrapper(obj, prop):
     return f
 
 
-@app.route(re.compile("/api/auto-mode/(True|False|)"))
+@app.route(re.compile("/api/auto-mode/([Tt]rue|[Ff]alse|)"))
 @cors
-def auto_mode(req, resp, headers=None):
-    yield from settable(
+async def auto_mode(req, resp, headers=None):
+    """Turn auto mode on or off."""
+    await settable(
         property_wrapper(irrigation.auto_waterer, "auto_mode"), req, resp, headers
     )
 
 
-@app.route(re.compile("/api/watering/(True|False|)"))
+@app.route(re.compile("/api/watering/([Tt]rue|[Ff]alse|)"))
 @cors
-def watering(req, resp, headers=None):
-    yield from settable(irrigation.auto_waterer.watering, req, resp, headers)
+async def watering(req, resp, headers=None):
+    """Turn watering mode on or off."""
+    await settable(irrigation.auto_waterer.watering, req, resp, headers)
 
 
-@app.route(re.compile("/api/valve/(True|False|)"))
+@app.route(re.compile("/api/valve/([Tt]rue|[Ff]alse|)"))
 @cors
-def control_valve(req, resp, headers=None):
-    yield from settable(hal.valve.state, req, resp, headers)
+async def control_valve(req, resp, headers=None):
+    """Turn valve on or off."""
+    await settable(hal.valve.state, req, resp, headers)
 
 
 @app.route("/api/settings/")
 @cors
-def allsettings(req, resp, headers=None):
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite(json.dumps(settings.settings))
+async def allsettings(req, resp, headers=None):
+    """Get all settings."""
+    await json_response(resp, settings.settings, headers)
 
 
 @app.route(re.compile("^/api/settings/(.+)/(.*)"))
 @cors
-def setting(req, resp, headers=None):
+async def setting(req, resp, headers=None):
+    """Get or set a particular setting."""
     status = "200"
     k = req.url_match.group(1)
     if k not in settings.settings:
         status = "400"
-        response = {"error": "Supplied setting {} not found".format(k)}
+        data = {"error": "Supplied setting {} not found".format(k)}
 
     if status == "200" and req.method == "PUT":
         v = req.url_match.group(2)
@@ -165,35 +172,31 @@ def setting(req, resp, headers=None):
 
         try:
             settings.set(k, v)
-            response = {"value": v}
+            data = {"value": v}
         except Exception as e:
-            response = {"Error", e}
+            data = {"Error", e}
             status = "400"
 
     elif status == "200":
-        response = {"value": settings.get(k)}
+        data = {"value": settings.get(k)}
 
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers, status=status
-    )
-    yield from resp.awrite(json.dumps(response))
+    await json_response(resp, data, headers, status)
 
 
 @app.route("/api/log/")
 @cors
-def graph_log(req, resp, headers=None):
+async def graph_log(req, resp, headers=None):
+    """Get log of values for graph."""
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
 
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite("[")
+    await picoweb.start_response(resp, content_type="application/json", headers=headers)
+    await resp.awrite("[")
     started = False
     for reading in graph.packer.read(n=n, skip=skip):
         if started:
-            yield from resp.awrite(",")
+            await resp.awrite(",")
         enc = {
             "soil_temperature": reading.floats[0],
             "soil_humidity": reading.floats[1],
@@ -203,41 +206,39 @@ def graph_log(req, resp, headers=None):
             "timestamp": reading.timestamp,
             "id": reading.id,
         }
-        yield from resp.awrite("{}".format(json.dumps(enc)))
+        await resp.awrite("{}".format(json.dumps(enc)))
         started = True
-    yield from resp.awrite("]")
+    await resp.awrite("]")
     gc.collect()
 
 
 @app.route("/api/syslog/")
 @cors
-def syslog(req, resp, headers=None):
+async def syslog(req, resp, headers=None):
+    """Get syslog."""
     req.parse_qs()
     n = int(req.form["n"]) if "n" in req.form else 20
     skip = int(req.form["skip"] if "skip" in req.form else 0)
 
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite("[")
+    await picoweb.start_response(resp, content_type="application/json", headers=headers)
+    await resp.awrite("[")
     started = False
     for i, timestamp, line in log.rotating_log.read(n=n, skip=skip):
         if started:
-            yield from resp.awrite(",")
-        yield from resp.awrite(
-            json.dumps({"line": line, "timestamp": timestamp, "id": i})
-        )
+            await resp.awrite(",")
+        await resp.awrite(json.dumps({"line": line, "timestamp": timestamp, "id": i}))
         started = True
 
-    yield from resp.awrite("]")
+    await resp.awrite("]")
 
 
 @app.route("/api/repl/")
 @cors
 async def fallback(req, resp, headers=None):
+    """Fall back to repl."""
     with open("/.fallback", "w") as f:
         f.write("")
-    countdown()
+    _countdown()
     encoded = json.dumps({"status": "Falling back in 10s"})
     await picoweb.start_response(resp, content_type="application/json", headers=headers)
     await resp.awrite(encoded)
@@ -251,29 +252,33 @@ async def _fallback():
     reset()
 
 
-def countdown():
+def _countdown():
     asyncio.get_event_loop().create_task(_fallback())
 
 
 @app.route("/api/runtime/")
 @cors
-def runtime(req, resp, headers=None):
-    encoded = json.dumps({"value": clock.timestr(clock.runtime())})
-    yield from picoweb.start_response(
-        resp, content_type="application/json", headers=headers
-    )
-    yield from resp.awrite(encoded)
+async def runtime(req, resp, headers=None):
+    """Get runtime."""
+    data = {"value": clock.timestr(clock.runtime())}
+    await json_response(resp, data, headers)
 
 
 @app.route("/api/frequency/")
 @cors
 async def freq(req, resp, headers=None):
-    encoded = json.dumps({"value": hal.counter.frequency})
-    await picoweb.start_response(resp, content_type="application/json", headers=headers)
-    await resp.awrite(encoded)
+    """Get frequency of flow sensor."""
+    await json_response(resp, {"value": hal.flow_sensor.frequency}, headers)
 
 
-def report_status():
+@app.route("/api/flowrate/")
+@cors
+async def flowrate(req, resp, headers=None):
+    """Get flow rate of flow sensor."""
+    await json_response(resp, {"value": hal.flow_sensor.rate}, headers)
+
+
+def _report_status():
     report = hal.status()
     report["runtime"] = clock.timestr(clock.runtime())
     report.update(settings.settings)
@@ -281,8 +286,10 @@ def report_status():
 
 
 async def run_app():
+    """Start up the api."""
     app.run(debug=-1, host="0.0.0.0", port="9874", log=logging.getLogger("picoweb"))
 
 
 def init(loop):
+    """Initialise this module."""
     loop.create_task(run_app())
