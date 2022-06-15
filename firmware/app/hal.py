@@ -67,7 +67,7 @@ def bools():
     from . import irrigation
 
     return (
-        valve.state(),
+        bool(valve.state()),
         irrigation.auto_waterer.watering(),
         irrigation.auto_waterer.auto_mode,
     )
