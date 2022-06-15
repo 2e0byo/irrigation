@@ -1,8 +1,8 @@
-from machine import Pin
-from sys import stdout, print_exception
+from sys import print_exception, stdout
 
 
 def soft_reset():
+    """Soft reset everything."""
     import sys
 
     for k in sys.modules:
@@ -11,8 +11,10 @@ def soft_reset():
     print("Unimported everything")
 
 
-def fallback_connect():
+def network_connect():
+    """Connect to the network."""
     import secrets
+
     import network
 
     sta_if = network.WLAN(network.STA_IF)
@@ -42,7 +44,7 @@ try:
     # logger.addHandler(sh)
     logger.debug("Logger initialised")
 
-    fallback_connect()
+    network_connect()
 
     import uos
 
@@ -67,7 +69,7 @@ try:
 except Exception as e:
     print("Falling back....")
     print_exception(e)
-    fallback_connect()
+    network_connect()
     try:
         logger.error(print_exception(e))
         logger.info("Running failsafe repl.")
