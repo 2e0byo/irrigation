@@ -1,16 +1,36 @@
+# general imports
 from time import sleep
-from sys import print_exception
-import uos
-import uasyncio as asyncio
 
+# micropython specific imports
 try:
-    uos.remove("/.fallback")
-    raise Exception("Falling back to repl this once")
-except OSError:
-    pass
+    from micropython import const
+
+    upython = True
+except ImportError:
+    upython = False
+
+    def const(x):
+        """Wrapper fn for micropython's const."""
+        return x
+
+
+if upython:
+    from sys import print_exception
+
+    import uasyncio as asyncio
+    import uos
+
+    try:
+        uos.remove("/.fallback")
+        raise Exception("Falling back to repl this once.")
+    except OSError:
+        pass
+else:
+    import asyncio
 
 
 async def wait_safe():
+    """Wait and then flag an upgraded system as safe."""
     await asyncio.sleep(60 * 10)
     try:
         uos.remove("/.runsafe")
@@ -19,10 +39,10 @@ async def wait_safe():
 
 
 def start(logger):
+    """Start the app."""
     print("Starting up")
 
     import gc
-    from time import sleep
 
     import machine
     import uasyncio as asyncio

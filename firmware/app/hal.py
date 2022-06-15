@@ -6,58 +6,13 @@ from sht1x import SHT1x
 
 from . import graph
 from .settings import settings
+from .valve import Valve
 
 logger = logging.getLogger("Hal")
 
 en = Pin(23, Pin.OUT)
 in1 = Pin(22, Pin.OUT)
 in2 = Pin(21, Pin.OUT)
-
-
-class Valve:
-    OPEN = 0
-    CLOSE = 1
-
-    def __init__(self, name, en, in1, in2):
-        self.en = en
-        self.in1 = in1
-        self.in2 = in2
-        self.en.off()
-        self._state = False
-        self.name = name
-        self._logger = logging.getLogger(self.name)
-
-    @property
-    def pulse_duration(self):
-        return settings.get("{}--pulse_duration".format(self.name), 1)
-
-    def _open(self):
-        self.en.off()
-        self.in1.on()
-        self.in2.off()
-        self.en.on()
-
-    def _close(self):
-        self.en.off()
-        self.in1.off()
-        self.in2.on()
-        self.en.on()
-
-    async def _pulse(self, direction):
-        on = direction == self.OPEN
-        self._open() if on else self._close()
-        await asyncio.sleep(self.pulse_duration)
-        self.en.off()
-        self._logger.info(f"{'Opened' if on else 'Closed'} valve.")
-
-    def state(self, val=None):
-        if val:
-            asyncio.create_task(self._pulse(self.OPEN))
-            self._state = True
-        elif val is False:
-            asyncio.create_task(self._pulse(self.CLOSE))
-            self._state = False
-        return self._state
 
 
 class TempSensor:
