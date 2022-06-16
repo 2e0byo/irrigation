@@ -102,7 +102,7 @@ class RateAwareValve(Valve):
         """Initialise the RateAwareValve object."""
         super().__init__(*args, **kwargs)
         self.rate_callback = rate_callback
-        self.transition_seconds = 15
+        self.transition_seconds = 6
 
     async def achieved_state(self, end_state):
         """Determine from the flow rate if we have achieved the desired state."""
