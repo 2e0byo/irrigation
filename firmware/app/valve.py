@@ -33,6 +33,7 @@ class Valve:
         self._state = self.CLOSED
         self.name = name
         self._logger = logging.getLogger(self.name)
+        self.lock = asyncio.Lock()
 
     @property
     def pulse_duration(self):
@@ -83,12 +84,14 @@ class Valve:
             Exception if unable to achieve state.
 
         """
-        if val:
-            self._state = self.OPENING
-            await self._pulse(self.OPEN)
-        elif val is False:
-            self._state = self.CLOSING
-            await self._pulse(self.CLOSED)
+        if val is not None:
+            async with self.lock:
+                if val:
+                    self._state = self.OPENING
+                    await self._pulse(self.OPEN)
+                else:
+                    self._state = self.CLOSING
+                    await self._pulse(self.CLOSED)
         return self._state
 
 

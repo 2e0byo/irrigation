@@ -33,6 +33,26 @@ async def test_state(valve):
     assert await valve.state(False) == valve.CLOSED
 
 
+async def test_conflict(valve):
+    release = False
+
+    async def achieved_state(*args):
+        nonlocal release
+        return release
+
+    valve.achieved_state = achieved_state
+    task1 = asyncio.create_task(valve.state(True))
+    task2 = asyncio.create_task(valve.state(False))
+    await asyncio.sleep(0.3)
+    assert not task1.done()
+    assert not task2.done()
+    release = True
+    await asyncio.sleep(0.2)
+    assert task1.done()
+    assert task2.done()
+    assert valve.current_state == valve.CLOSED
+
+
 async def test_fail_once(valve):
     x = 0
 
