@@ -38,6 +38,21 @@ async def wait_safe():
         pass
 
 
+# Trick from Peter Hinch. uasyncio.iscoroutine(x) doesn't exist.
+async def _g():
+    pass
+
+
+_type_coro = type(_g())
+
+
+async def run(x: callable):
+    """Run x, awaiting if needed."""
+    if type(x) == _type_coro:
+        return await x
+    return x
+
+
 def start(logger):
     """Start the app."""
     print("Starting up")

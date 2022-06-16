@@ -1,12 +1,20 @@
 import gc
 import logging
 import re
-from sys import print_exception
+
+from . import run, upython
+
+if upython:
+    from sys import print_exception
+
+    import uasyncio as asyncio
+    import ujson as json
+    import utemplate.recompile
+else:
+    import asyncio
+    import json
 
 import picoweb
-import uasyncio as asyncio
-import ujson as json
-import utemplate.recompile
 
 from . import clock, graph, hal, irrigation, log
 from .settings import settings
@@ -107,10 +115,10 @@ async def settable(f, req, resp, headers=None):
             data = {"error": "No state supplied.  Please use GET to get status."}
             status = "403"
         else:
-            f(True if req.url_match.group(1).lower() == "true" else False)
+            await run(f(True if "true" in req.url_match.group(1).lower() else False))
 
     if not data:
-        data = {"value": f()}
+        data = {"value": await run(f())}
     await json_response(resp, data, headers, status)
 
 

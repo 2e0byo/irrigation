@@ -67,7 +67,7 @@ def bools():
     from . import irrigation
 
     return (
-        bool(valve.state()),
+        valve.current_state >= valve.OPENING,
         irrigation.auto_waterer.watering(),
         irrigation.auto_waterer.auto_mode,
     )
@@ -77,7 +77,7 @@ def status():
     from . import irrigation
 
     state = {
-        "valve": valve.state(),
+        "valve": valve.current_state,
         "soil_temperature": temp_sensor.temperature,
         "soil_humidity": temp_sensor.humidity,
         "watering": irrigation.auto_waterer.watering(),
@@ -142,4 +142,4 @@ flow_sensor = FlowSensor(Pin(19, Pin.IN), 1_000)
 
 def init(loop):
     temp_sensor.init(loop)
-    valve.state(False)
+    asyncio.create_task(valve.state(False))
