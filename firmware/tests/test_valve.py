@@ -28,6 +28,11 @@ async def test_open_close(valve):
     assert await valve.state() == valve.CLOSED
 
 
+async def test_state(valve):
+    assert await valve.state(True) == valve.OPEN
+    assert await valve.state(False) == valve.CLOSED
+
+
 async def test_fail_once(valve):
     x = 0
 
