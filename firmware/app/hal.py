@@ -6,13 +6,9 @@ from sht1x import SHT1x
 
 from . import graph
 from .settings import settings
-from .valve import Valve
+from .valve import RateAwareValve
 
 logger = logging.getLogger("Hal")
-
-en = Pin(23, Pin.OUT)
-in1 = Pin(22, Pin.OUT)
-in2 = Pin(21, Pin.OUT)
 
 
 class TempSensor:
@@ -86,7 +82,6 @@ def status():
     return state
 
 
-valve = Valve("valve1", en, in1, in2)
 clk = Pin(18)
 data = Pin(17)
 power = Pin(5, Pin.OUT)
@@ -138,6 +133,11 @@ class FlowSensor(FreqCounter):
 
 
 flow_sensor = FlowSensor(Pin(19, Pin.IN), 1_000)
+en = Pin(23, Pin.OUT)
+in1 = Pin(22, Pin.OUT)
+in2 = Pin(21, Pin.OUT)
+
+valve = RateAwareValve("valve1", en, in1, in2, rate_callback=lambda: flow_sensor.rate)
 
 
 def init(loop):
